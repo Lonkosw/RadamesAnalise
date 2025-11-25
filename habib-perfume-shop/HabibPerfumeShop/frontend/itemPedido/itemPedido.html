@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pedido - Produtos</title>
+    <link rel="stylesheet" href="/common/crud.css" />
+</head>
+<body>
+    <header class="app-header">
+        <div class="brand" id="brand">Habib Perfume Shop</div>
+        <nav id="mainNav" class="main-nav"></nav>
+        <div id="userBox" class="user-box"></div>
+    </header>
+    <main class="crud-container">
+        <h1 class="crud-title">Produtos do Pedido</h1>
+        <section class="crud-panel">
+            <form id="formFiltro" class="crud-filters" autocomplete="off">
+                <div class="field">
+                    <label for="f_q">Busca</label>
+                    <input id="f_q" name="q" placeholder="id pedido ou produto" />
+                </div>
+                <div class="actions">
+                    <button type="submit" class="btn primary">Filtrar</button>
+                    <button type="button" id="btnLimparFiltro" class="btn">Limpar</button>
+                    <button type="button" id="btnNovo" class="btn success">Novo</button>
+                    <button type="button" id="btnRecarregar" class="btn">Recarregar</button>
+                </div>
+            </form>
+            <div id="feedback" class="feedback" hidden></div>
+            <table id="tabela" class="crud-table">
+                <thead>
+                    <tr>
+                        <th>Pedido</th>
+                        <th>Produto</th>
+                        <th>Qtd</th>
+                        <th>Preço Unit</th>
+                        <th>Total</th>
+                        <th class="acoes">Ações</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </section>
+        <section id="secForm" class="crud-form-wrapper" hidden>
+            <h2 id="tituloForm">Associar Produto</h2>
+            <form id="formRegistro" class="crud-form" autocomplete="off">
+                <div class="grid-3">
+                    <div class="field">
+                        <label for="id_pedido">ID Pedido</label>
+                        <input id="id_pedido" name="id_pedido" type="number" required />
+                    </div>
+                    <div class="field">
+                        <label for="id_produto">ID Produto</label>
+                        <input id="id_produto" name="id_produto" type="number" required />
+                    </div>
+                    <div class="field">
+                        <label for="quantidade">Quantidade</label>
+                        <input id="quantidade" name="quantidade" type="number" min="1" required />
+                    </div>
+                    <div class="field">
+                        <label for="preco_unitario">Preço Unitário</label>
+                        <input id="preco_unitario" name="preco_unitario" type="number" step="0.01" required />
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn primary">Salvar</button>
+                    <button type="button" class="btn" id="btnCancelar">Cancelar</button>
+                    <button type="button" class="btn danger" id="btnExcluir" hidden>Excluir</button>
+                </div>
+            </form>
+        </section>
+    </main>
+    <script src="/common/crud.js"></script>
+    <script src="itemPedido.js"></script>
+    <script src="../common/simpleHeader.js"></script>
+</body>
+</html>

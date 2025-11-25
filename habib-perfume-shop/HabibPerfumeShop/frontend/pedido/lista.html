@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Meus Pedidos</title>
+  <link rel="stylesheet" href="pedido.css" />
+</head>
+<body>
+  <header class="top-bar">
+    <div class="logo-area"><a href="/menu.html">Habib Perfume Shop</a></div>
+    <nav class="nav-actions">
+      <a href="/menu.html">Catálogo</a>
+      <a href="/carrinho/carrinho.html">Carrinho</a>
+      <strong>Pedidos</strong>
+    </nav>
+  </header>
+  <main class="page">
+    <h1>Meus Pedidos</h1>
+    <table class="tabela-lista" id="tblPedidos">
+      <thead>
+        <tr><th>ID</th><th>Data</th><th>Total</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div id="estadoVazio" class="estado hidden">Nenhum pedido encontrado.</div>
+  </main>
+  <script src="lista.js?v=20251009"></script>
+</body>
+</html>

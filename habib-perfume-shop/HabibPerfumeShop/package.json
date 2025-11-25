@@ -1,0 +1,31 @@
+{
+  "name": "habibperfumeshop",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "stock:demo": "psql -h localhost -p 5432 -U postgres -d habib-shop -f backend/scripts/ajustar_estoque_demo.sql",
+    "stock:demo:node": "node backend/scripts/ajustar_estoque_demo.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lonkosw/HabibPerfumeShop.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Lonkosw/HabibPerfumeShop/issues"
+  },
+  "homepage": "https://github.com/Lonkosw/HabibPerfumeShop#readme",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "bcryptjs": "^3.0.2",
+    "cookie-parser": "^1.4.7",
+    "express": "^5.1.0",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.16.3"
+  }
+}

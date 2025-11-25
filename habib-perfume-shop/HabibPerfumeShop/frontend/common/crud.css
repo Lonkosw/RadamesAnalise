@@ -1,0 +1,26 @@
+body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:70px 20px 40px;background:#f5f7fb;color:#222}
+.h-container{max-width:1200px;margin:0 auto}
+.page-title{display:flex;align-items:center;gap:12px;margin:0 0 20px}
+.page-title h1{font-size:22px;margin:0}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 15px}
+.toolbar input, .toolbar select{padding:8px;border:1px solid #ccc;border-radius:4px;font-size:14px}
+.toolbar button{padding:8px 14px;background:#2563eb;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px}
+.toolbar button.secondary{background:#64748b}
+.toolbar button.danger{background:#b91c1c}
+.toolbar button:disabled{opacity:.5;cursor:not-allowed}
+.table-wrap{background:#fff;border:1px solid #e2e8f0;border-radius:8px;overflow:auto;box-shadow:0 2px 4px rgba(0,0,0,.04)}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:600px}
+th,td{padding:8px 10px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}
+th{background:#f1f5f9;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+tr:hover td{background:#fafafa}
+.badge{display:inline-block;padding:2px 6px;font-size:11px;border-radius:10px;background:#e2e8f0}
+form.crud-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:18px}
+form.crud-form label{font-size:12px;font-weight:600;color:#334155;display:flex;flex-direction:column;gap:4px}
+form.crud-form input, form.crud-form textarea{padding:8px;border:1px solid #cbd5e1;border-radius:4px;font-size:13px;background:#fff}
+form.crud-form textarea{min-height:70px;resize:vertical}
+form.crud-form button.submit{grid-column:1/-1;margin-top:4px}
+.feedback{margin-top:10px;font-size:12px}
+.status-ok{color:#15803d}
+.status-err{color:#b91c1c}
+.empty{padding:25px;text-align:center;color:#64748b}
+.actions-col button{margin-right:4px}

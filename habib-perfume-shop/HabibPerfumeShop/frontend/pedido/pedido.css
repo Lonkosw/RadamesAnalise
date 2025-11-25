@@ -1,0 +1,56 @@
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#fafbfc;color:#222;}
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 28px;background:#fff;border-bottom:1px solid #e2e5e9;position:sticky;top:0;}
+.top-bar a{text-decoration:none;color:#444;font-weight:600;}
+.nav-actions a, .nav-actions strong{margin-left:18px;font-size:14px;color:#555;}
+.nav-actions strong{color:#111;}
+.page{max-width:1100px;margin:24px auto;padding:0 24px;}
+h1{margin:0 0 16px;font-size:26px;}
+
+/* Pedido view */
+.header-pedido{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.header-pedido h1{font-size:24px;margin:0;}
+.badge{display:inline-block;padding:4px 10px;border-radius:999px;background:#eee;font-size:12px;font-weight:600;letter-spacing:.5px;}
+.badge.status-AGUARDANDO_PAGAMENTO{background:#ffebcc;color:#8a5900;}
+.badge.status-PAGO{background:#d3f9d8;color:#1b5e20;}
+.badge.status-CANCELADO{background:#ffd6d9;color:#7f1d1d;}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:16px 0 24px;font-size:14px;}
+.tabela-itens{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e3e6ea;font-size:14px;}
+.tabela-itens th,.tabela-itens td{padding:8px 10px;border-bottom:1px solid #eef1f4;text-align:left;}
+.tabela-itens th{background:#f5f7f9;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#555;}
+.tabela-itens tbody tr:last-child td{border-bottom:none;}
+.tabela-itens tbody tr:hover{background:#f9fbfd;}
+.tabela-itens td.num{text-align:right;font-variant-numeric:tabular-nums;}
+
+.estado{padding:40px 20px;text-align:center;color:#666;}
+.estado.erro{color:#b00020;}
+.hidden{display:none!important;}
+
+.btn{display:inline-block;background:#4a63e7;color:#fff;border:none;padding:10px 20px;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;}
+.btn:hover{background:#3d55d9;}
+.btn.outline{background:#fff;color:#2d44c9;border:1px solid #2d44c9;}
+.btn.outline:hover{background:#f5f7ff;}
+
+.acoes-pedido{margin:24px 0;display:flex;gap:12px;flex-wrap:wrap;}
+.voltar-area{margin-top:32px;}
+
+/* Lista */
+.tabela-lista{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e3e6ea;margin-top:8px;font-size:14px;}
+.tabela-lista th,.tabela-lista td{padding:8px 10px;border-bottom:1px solid #eef1f4;}
+.tabela-lista th{background:#f5f7f9;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#555;}
+.tabela-lista tbody tr:last-child td{border-bottom:none;}
+.tabela-lista tbody tr:hover{background:#f9fbfd;}
+.tabela-lista td.num{text-align:right;font-variant-numeric:tabular-nums;}
+.link-acoes{color:#2d44c9;text-decoration:none;font-weight:600;}
+.link-acoes:hover{text-decoration:underline;}
+
+@media (max-width:640px){
+  .info-grid{grid-template-columns:1fr;}
+  .nav-actions a, .nav-actions strong{margin-left:10px;}
+}
+
+/* Pix section */
+.pagamento-pix{margin-top:28px;background:#fff;border:1px solid #e3e6ea;border-radius:8px;padding:16px;box-shadow:0 2px 4px rgba(0,0,0,.04);} 
+.pagamento-pix h2{margin-top:0;font-size:18px;}
+.pix-payload{background:#f5f7f9;padding:8px 10px;border-radius:6px;max-height:140px;overflow:auto;font-size:12px;line-height:1.3;word-break:break-all;}
+.pix-acoes{margin-top:10px;}
+.pix-acoes .btn{font-size:12px;padding:8px 14px;}

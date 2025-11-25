@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Habib Perfume Shop - Login</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #333;
+    }
+
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .top-buttons {
+      margin-bottom: 20px;
+    }
+
+    .top-buttons button {
+      background: #f0f0f0;
+      border: none;
+      padding: 10px 20px;
+      margin: 0 5px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .top-buttons button.active {
+      background: #667eea;
+      color: white;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #5a67d8;
+    }
+
+    .frame {
+      display: none;
+    }
+
+    .frame.active {
+      display: block;
+    }
+
+    .funcionario {
+      margin-top: 20px;
+      border-top: 1px solid #ddd;
+      padding-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>Habib Perfume Shop</h2>
+    <div class="top-buttons">
+      <button id="btnLogin" class="active" onclick="alternar('login')">Login</button>
+      <button id="btnCadastro" onclick="alternar('cadastro')">Cadastro</button>
+    </div>
+
+    <div id="areaLogin" class="frame active">
+      <p style="margin:0 0 8px 0;font-weight:bold;">Login Universal</p>
+  <input type="email" id="loginEmailUniversal" placeholder="Email (cliente ou funcionário)" autocomplete="username" required />
+      <input type="password" id="loginSenha" placeholder="Senha" autocomplete="current-password" required />
+  <button onclick="loginUniversal()">Entrar</button>
+  <small style="display:block;margin-top:8px;color:#555">Use o email cadastrado (ex: marcos.pereira@empresa.com)</small>
+    </div>
+
+    <div id="areaCadastro" class="frame">
+      <input type="text" id="cadastroCpf" placeholder="CPF (11 dígitos)" maxlength="11" required />
+      <input type="text" id="cadastroNome" placeholder="Nome completo" required />
+      <input type="email" id="cadastroEmail" placeholder="E-mail" required />
+      <input type="password" id="cadastroSenha" placeholder="Senha" required />
+      <button onclick="cadastrarCliente()">Cadastrar</button>
+    </div>
+    <div id="msg" style="margin-top:10px;font-weight:bold;"></div>
+  </div>
+
+  <script>
+    const API_BASE_URL = 'http://localhost:3001';
+
+    function alternar(area) {
+      document.querySelectorAll('.frame').forEach(f => f.classList.remove('active'));
+      document.querySelectorAll('.top-buttons button').forEach(b => b.classList.remove('active'));
+      if (area === 'login') {
+        document.getElementById('areaLogin').classList.add('active');
+        btnLogin.classList.add('active');
+      } else {
+        document.getElementById('areaCadastro').classList.add('active');
+        btnCadastro.classList.add('active');
+      }
+      limparMensagem();
+    }
+
+    function setMensagem(texto, ok = false) {
+      const d = document.getElementById('msg');
+      d.style.color = ok ? 'green' : 'red';
+      d.textContent = texto;
+    }
+    function limparMensagem(){ setMensagem(''); }
+
+    async function loginUniversal(){
+      limparMensagem();
+      const email = loginEmailUniversal.value.trim();
+      const senha = loginSenha.value.trim();
+      if(!email || !senha){ setMensagem('Informe email e senha'); return; }
+      try {
+        const r = await fetch(API_BASE_URL + '/login/universal', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          credentials:'include',
+          body: JSON.stringify({ email, senha })
+        });
+        let data; try { data = await r.json(); } catch { setMensagem('Resposta inválida'); return; }
+        if(r.ok && data.status==='ok'){
+          const t = data.usuario.tipo === 'funcionario' ? (data.usuario.gerente? 'Gerente':'Funcionário') : 'Cliente';
+          setMensagem('Login '+t+' ok. Redirecionando...', true);
+          setTimeout(()=> window.location.href = API_BASE_URL + '/menu', 600);
+        } else {
+          setMensagem(data.mensagem || data.message || 'Credenciais inválidas');
+        }
+      } catch (e){
+        setMensagem('Erro de rede');
+      }
+    }
+
+    async function cadastrarCliente() {
+      const cpf = document.getElementById('cadastroCpf').value.trim();
+      const nome = document.getElementById('cadastroNome').value.trim();
+      const email = document.getElementById('cadastroEmail').value.trim();
+      const senha = document.getElementById('cadastroSenha').value.trim();
+
+      if (!cpf || !nome || !email || !senha) {
+        alert('Preencha todos os campos');
+        return;
+      }
+
+      if (!/^\d{11}$/.test(cpf)) {
+        alert('CPF deve ter 11 dígitos numéricos');
+        return;
+      }
+
+      try {
+        const res = await fetch(API_BASE_URL + '/login/cadastrarCliente', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ cpf, nome, email, senha })
+        });
+        let data; try { data = await res.json(); } catch { setMensagem('Resposta inválida', false); return; }
+        if (res.ok && data.status === 'ok') {
+          setMensagem('Cadastro realizado! Redirecionando...', true);
+          setTimeout(()=> window.location.href = API_BASE_URL + '/menu', 700);
+        } else {
+          setMensagem(data.mensagem || data.message || 'Erro no cadastro');
+        }
+      } catch (e){
+        setMensagem('Erro de rede no cadastro');
+      }
+    }
+
+    // Verificar se deve mostrar cadastro
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('cadastro') === 'true') {
+      alternar('cadastro');
+    }
+  </script>
+  <script src="../common/simpleHeader.js"></script>
+</body>
+
+</html>

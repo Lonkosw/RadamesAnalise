@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Funcionários - Administração</title>
+  <link rel="stylesheet" href="/common/crud.css">
+  <style>
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:900px){.grid-2{grid-template-columns:1fr}}
+  </style>
+  <script defer>
+    const API='/funcionario';
+    const CARGOS_BASE = ['Gerente','Vendedor','Caixa','Atendente','Estoquista'];
+    async function fetchJson(url, opts){ const r=await fetch(url, opts); if(!r.ok) throw await r.json().catch(()=>({error:'Erro'})); return r.json(); }
+    function el(q){ return document.querySelector(q); }
+    function fmt(v){ return v!=null? Number(v).toFixed(2):'' }
+    async function carregar(q){
+      const url = q? `${API}?q=${encodeURIComponent(q)}`: API;
+      const data = await fetchJson(url,{credentials:'include'});
+      const tbody = el('#tb tbody'); tbody.innerHTML='';
+      (data||[]).forEach(f=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${f.cpf}</td><td>${f.nome||''}</td><td>${f.cargo||''}</td><td>${fmt(f.salario)}</td><td>${f.porcentagem_comissao!=null? Number(f.porcentagem_comissao).toFixed(2):''}</td><td>${f.email||''}</td><td class='actions-col'><button data-editar='${f.cpf}'>Editar</button></td>`;
+        tbody.appendChild(tr);
+      });
+
+      // Popular o select de cargos a partir da base + cargos existentes, removendo "Gerente Master"
+      const cargos = new Set(CARGOS_BASE);
+      (data||[]).forEach(f=>{ if(f.cargo) cargos.add(String(f.cargo)); });
+      cargos.delete('Gerente Master');
+      const select = el('#cargo');
+      if (select) {
+        const current = select.value;
+        select.innerHTML = '';
+        [...cargos].forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; select.appendChild(o); });
+        if(current && [...cargos].includes(current)) select.value=current;
+      }
+    }
+    async function obter(cpf){ return fetchJson(`${API}/${cpf}`,{credentials:'include'}); }
+    async function criar(payload){ return fetchJson(API,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(payload)}); }
+    async function atualizar(cpf,payload){ return fetchJson(`${API}/${cpf}`,{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(payload)}); }
+    async function excluir(cpf){ const r=await fetch(`${API}/${cpf}`,{method:'DELETE',credentials:'include'}); if(!r.ok) throw await r.json().catch(()=>({error:'Erro'})); }
+
+    document.addEventListener('DOMContentLoaded',()=>{
+      const filtro = el('#filtro');
+      el('#btnBuscar').onclick=()=> carregar(filtro.value.trim());
+      el('#btnLimpar').onclick=()=>{ filtro.value=''; carregar(); };
+      el('#btnRecarregar').onclick=()=> carregar(filtro.value.trim());
+      carregar();
+
+      // Novo
+      el('#btnNovo').onclick=()=>{
+        el('#formTitulo').textContent='Novo Funcionário';
+        el('#form').reset();
+        el('#cpf').readOnly=false;
+        const cpfOrig = el('#cpfOriginal'); if(cpfOrig) cpfOrig.value='';
+        el('#btnExcluir').hidden=true;
+        el('#painel').hidden=false;
+        el('#senha').required=true;
+        el('#senhaHelp').textContent='Defina uma senha para o novo funcionário.';
+      };
+
+      // Cancelar
+      el('#btnCancelar').onclick=()=> el('#painel').hidden=true;
+
+      // Editar
+      el('#tb').addEventListener('click', async e=>{
+        const btn = e.target.closest('button[data-editar]'); if(!btn) return;
+        let d; try{ d = await obter(btn.getAttribute('data-editar')); }catch(err){ el('#status').textContent = (err&&err.error)||'Erro ao carregar funcionário'; el('#status').className='feedback status-err'; return; }
+        el('#formTitulo').textContent='Editar Funcionário';
+        el('#painel').hidden=false; el('#cpf').value=d.cpf; el('#cpf').readOnly=false;
+        el('#cpfOriginal').value=d.cpf;
+        el('#nome').value=d.nome||''; el('#cargo').value=d.cargo||''; el('#salario').value=d.salario!=null? d.salario:''; el('#porcentagem_comissao').value=d.porcentagem_comissao!=null? d.porcentagem_comissao:''; el('#email').value=d.email||''; el('#senha').value='';
+        el('#senha').required=false; el('#senhaHelp').textContent='Deixe em branco para manter a senha atual.';
+        el('#btnExcluir').hidden=false;
+      });
+
+      // Salvar
+      el('#form').onsubmit = async ev=>{
+        ev.preventDefault();
+        const payload = Object.fromEntries(new FormData(el('#form')).entries());
+        if(payload.salario==='') delete payload.salario; else payload.salario = Number(payload.salario);
+        if(payload.porcentagem_comissao==='') delete payload.porcentagem_comissao; else payload.porcentagem_comissao = Number(payload.porcentagem_comissao);
+        const cpf = el('#cpf').value.trim();
+        try{
+          if(el('#cpfOriginal').value){ // editar
+            const cpfOriginal = el('#cpfOriginal').value.trim();
+            if(payload.senha==='') delete payload.senha;
+            if(cpf !== cpfOriginal){ payload.novo_cpf = cpf; }
+            delete payload.cpf;
+            await atualizar(cpfOriginal, payload);
+          } else {
+            await criar(payload);
+          }
+          el('#status').textContent='Salvo'; el('#status').className='feedback status-ok';
+          await carregar(el('#filtro').value.trim()); el('#painel').hidden=true;
+        }catch(e){ el('#status').textContent=e.error||'Erro'; el('#status').className='feedback status-err'; }
+      };
+
+      // Excluir
+      el('#btnExcluir').onclick = async ()=>{
+        const cpf = (el('#cpfOriginal').value || el('#cpf').value).trim(); if(!cpf) return;
+        if(!confirm('Excluir funcionário?')) return;
+        try{ await excluir(cpf); el('#status').textContent='Excluído'; el('#status').className='feedback status-ok'; await carregar(el('#filtro').value.trim()); el('#painel').hidden=true; }catch(e){ el('#status').textContent=e.error||'Erro'; el('#status').className='feedback status-err'; }
+      };
+    });
+  </script>
+</head>
+<body>
+  <div class="h-container">
+    <div class="page-title"><h1>Funcionários</h1></div>
+    <div class="toolbar">
+      <input id="filtro" placeholder="Buscar por cpf/nome/cargo/email" />
+      <button id="btnBuscar">Buscar</button>
+      <button id="btnLimpar" class="secondary">Limpar</button>
+      <button id="btnRecarregar">Recarregar</button>
+      <button id="btnNovo" class="secondary">Novo Funcionário</button>
+    </div>
+    <div class="table-wrap" id="tb">
+      <table>
+        <thead><tr><th>CPF</th><th>Nome</th><th>Cargo</th><th>Salário</th><th>Comissão (%)</th><th>Email</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div id="painel" class="table-wrap" hidden>
+      <div class="h-container" style="padding:14px">
+        <h3 id="formTitulo">Novo Funcionário</h3>
+        <form id="form" class="crud-form">
+          <input type="hidden" id="cpfOriginal" />
+          <label>CPF<input id="cpf" name="cpf" maxlength="11" required pattern="\d{11}" inputmode="numeric" placeholder="Somente 11 dígitos" /></label>
+          <label>Nome<input id="nome" name="nome" required /></label>
+          <label>Cargo<select id="cargo" name="cargo" required></select></label>
+          <label>Salário<input id="salario" name="salario" type="number" step="0.01" min="0" max="99999999.99" /></label>
+          <label>Comissão (%)<input id="porcentagem_comissao" name="porcentagem_comissao" type="number" step="0.01" min="0" max="100" /></label>
+          <label>Email<input id="email" name="email" type="email" required /></label>
+          <label>Senha<input id="senha" name="senha" type="password" minlength="4" /><small id="senhaHelp" class="feedback" style="margin:0"></small></label>
+          <button class="submit">Salvar</button>
+        </form>
+        <div class="toolbar">
+          <button id="btnExcluir" class="danger" hidden>Excluir</button>
+          <button id="btnCancelar" class="secondary">Cancelar</button>
+          <span id="status" class="feedback"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../common/simpleHeader.js"></script>
+</body>
+</html>

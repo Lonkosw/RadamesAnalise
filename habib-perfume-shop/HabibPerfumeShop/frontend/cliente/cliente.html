@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clientes</title>
+  <link rel="stylesheet" href="/common/crud.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand" id="brand">Habib Perfume Shop</div>
+    <nav class="main-nav" id="mainNav"></nav>
+    <div class="user-box" id="userBox"></div>
+  </header>
+  <main class="crud-container">
+    <h1 class="crud-title">Clientes</h1>
+    <section class="crud-panel">
+      <form id="formFiltro" class="crud-filters" autocomplete="off">
+        <div class="field">
+          <label for="f_q">Busca</label>
+          <input id="f_q" name="q" type="text" placeholder="nome ou email" />
+        </div>
+        <div class="actions">
+          <button type="submit" class="btn primary">Filtrar</button>
+          <button type="button" id="btnLimparFiltro" class="btn">Limpar</button>
+          <button type="button" id="btnNovo" class="btn success">Novo</button>
+          <button type="button" id="btnRecarregar" class="btn">Recarregar</button>
+        </div>
+      </form>
+
+      <div id="feedback" class="feedback" hidden></div>
+
+      <table id="tabela" class="crud-table">
+        <thead>
+          <tr>
+            <th data-col="cpf">CPF</th>
+            <th data-col="nome">Nome</th>
+            <th data-col="email">Email</th>
+            <th class="acoes">Ações</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section class="crud-form-wrapper" id="secForm" hidden>
+      <h2 id="tituloForm">Novo Cliente</h2>
+      <form id="formRegistro" class="crud-form" autocomplete="off">
+        <div class="grid-3">
+          <div class="field">
+            <label for="cpf">CPF</label>
+            <input id="cpf" name="cpf" maxlength="11" required pattern="\d{11}" />
+          </div>
+          <div class="field">
+            <label for="nome">Nome</label>
+            <input id="nome" name="nome" required />
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" required />
+          </div>
+          <div class="field" id="senhaWrapper">
+            <label for="senha">Senha</label>
+            <input id="senha" name="senha" type="password" required />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn primary" id="btnSalvar">Salvar</button>
+          <button type="button" class="btn" id="btnCancelar">Cancelar</button>
+          <button type="button" class="btn danger" id="btnExcluir" hidden>Excluir</button>
+        </div>
+      </form>
+    </section>
+  </main>
+  <script src="/common/crud.js"></script>
+  <script src="cliente.js"></script>
+  <script src="../common/simpleHeader.js"></script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Detalhe do Pedido</title>
+  <link rel="stylesheet" href="pedido.css" />
+</head>
+<body>
+  <header class="top-bar">
+    <div class="logo-area"><a href="/menu.html">Habib Perfume Shop</a></div>
+    <nav class="nav-actions">
+      <a href="/menu.html">Catálogo</a>
+      <a href="/carrinho/carrinho.html">Carrinho</a>
+      <a href="/pedido/lista.html">Meus Pedidos</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <section id="loading" class="estado loading">Carregando pedido...</section>
+    <section id="erro" class="estado erro hidden"></section>
+
+    <section id="pedidoView" class="pedido-view hidden">
+      <div class="header-pedido">
+        <h1>Pedido <span id="pedidoId"></span></h1>
+        <div class="status"><span id="pedidoStatus" class="badge"></span></div>
+      </div>
+      <div class="info-grid">
+        <div><strong>Data:</strong> <span id="pedidoData"></span></div>
+        <div><strong>Total:</strong> <span id="pedidoTotal"></span></div>
+        <div><strong>Cliente (CPF):</strong> <span id="pedidoCliente"></span></div>
+      </div>
+      <h2>Itens</h2>
+      <table class="tabela-itens">
+        <thead>
+          <tr><th>ID</th><th>Perfume</th><th>Qtd</th><th>Preço Unit.</th><th>Subtotal</th></tr>
+        </thead>
+        <tbody id="listaItens"></tbody>
+      </table>
+      <div id="secPagamentoPix" class="pagamento-pix hidden">
+        <h2>Pagamento Pix</h2>
+        <div class="pix-info">
+          <div><strong>Status Pix:</strong> <span id="pixStatus" class="badge"></span></div>
+          <div class="pix-payload-wrapper">
+            <strong>Payload:</strong>
+            <pre id="pixPayload" class="pix-payload"></pre>
+          </div>
+          <div class="pix-acoes">
+            <button id="btnCopiarPix" class="btn outline">Copiar código</button>
+          </div>
+        </div>
+      </div>
+      <div class="acoes-pedido" id="areaPagamento"></div>
+      <div class="voltar-area"><a class="btn" href="/menu.html">Voltar ao catálogo</a></div>
+    </section>
+  </main>
+
+  <div id="toast-box"></div>
+  <script src="pedido.js"></script>
+</body>
+</html>
