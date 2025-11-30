@@ -1,25 +1,64 @@
+// ============================================================================
+// pedidoRoutes.js - MODELO DO PROFESSOR (CandyShop)
+// Adaptado para HabibPerfumeShop
+// ============================================================================
 const express = require('express');
 const router = express.Router();
+const path = require('path');
 
 const pedidoController = require('../controllers/pedidoController');
 const { ensureAuth } = require('../middleware/auth');
-// Diagnóstico básico: log de requisições que chegam neste router
+
+// Diagnóstico básico
 router.use((req,res,next)=>{ console.log(`[pedidoRoutes] ${req.method} ${req.originalUrl}`); next(); });
 
-function ensureClienteMesmoOuFuncionario(req, res, next){
-	if(!req.usuario) return res.status(401).json({error:'Nao autenticado'});
-	// funcionario pode tudo
-	if(req.usuario.tipo === 'funcionario') return next();
-	// cliente só pode acessar seu próprio
-	if(req.usuario.tipo === 'cliente'){
-		if(req.params.cpf && req.params.cpf === req.usuario.cpf) return next();
-		if(req.params.id){
-			// Para rota /:id poderíamos fazer uma verificação posterior (simplificação: permitir e controller poderia validar se pertence)
-			return next();
-		}
-	}
-	return res.status(403).json({error:'Acesso negado'});
-}
+// ============================================================================
+// ROTAS DO MODELO DO PROFESSOR
+// ============================================================================
+
+// Abrir CRUD de pedidos (página HTML)
+router.get('/abrirCrudPedido', pedidoController.abrirCrudPedido);
+
+// Listar todos os pedidos - GET /pedido
+router.get('/', pedidoController.listarPedidos);
+
+// Rota para pedidos normais/físicos (ex: feitos por um funcionário) - POST /pedido/gerente
+router.post('/gerente', pedidoController.criarPedido);
+
+// Rota exclusiva para pedidos online (e-commerce) - POST /pedido/online
+router.post('/online', pedidoController.criarPedidoOnline); 
+
+// Obter pedido por ID - GET /pedido/:id
+router.get('/:id', pedidoController.obterPedido);
+
+// Atualizar pedido - PUT /pedido/:id
+router.put('/:id', pedidoController.atualizarPedido);
+
+// Deletar pedido - DELETE /pedido/:id
+router.delete('/:id', pedidoController.deletarPedido);
+
+// ============================================================================
+// ROTAS LEGADAS (mantidas para compatibilidade com frontend existente)
+// ============================================================================
+
+// Arquivos estáticos do carrinho
+router.get('/carrinho.html', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../frontend/carrinho/carrinho.html'));
+});
+router.get('/carrinho.js', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../frontend/carrinho/carrinho.js'));
+});
+
+// Compra direta
+router.post('/comprar', ensureAuth, pedidoController.comprarDireto);
+
+// Finalizar carrinho
+router.post('/carrinho/finalizar', ensureAuth, pedidoController.finalizarCarrinho);
+
+// Página do carrinho
+router.get('/carrinho', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../frontend/carrinho/carrinho.html'));
+});
 
 // Diagnostics
 router.get('/_ping', (req, res) => res.json({ ok: true }));
@@ -27,23 +66,13 @@ router.get('/_ping', (req, res) => res.json({ ok: true }));
 // Abrir página do CRUD
 router.get('/crud', pedidoController.abrirCrudPedido);
 
-// Lista todos os pedidos (apenas para funcionarios)
-router.get('/', ensureAuth, (req, res, next)=>{
-	if(req.usuario && req.usuario.tipo==='funcionario') return next();
-	return res.status(403).json({ error: 'Acesso restrito' });
-}, pedidoController.listarTodosPedidos);
-
-// Contagem de pedidos (apenas funcionarios)
+// Contagem de pedidos
 router.get('/_count', ensureAuth, (req,res,next)=>{
 	if(req.usuario && req.usuario.tipo==='funcionario') return next();
 	return res.status(403).json({ error: 'Acesso restrito' });
 }, pedidoController.contarPedidos);
 
-
-// Listar pedidos por cliente (colocar antes de /:id para não conflitar com literal 'cliente')
-router.get('/cliente/:cpf', ensureAuth, ensureClienteMesmoOuFuncionario, pedidoController.listarPedidosPorCliente);
-
-// Obter pedido por ID
-router.get('/:id', ensureAuth, ensureClienteMesmoOuFuncionario, pedidoController.obterPedido);
+// Listar pedidos por cliente
+router.get('/cliente/:cpf', ensureAuth, pedidoController.listarPedidosPorCliente);
 
 module.exports = router;

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatórios - Habib Perfume Shop</title>
+  <link rel="stylesheet" href="../styles/global.css">
+  <link rel="stylesheet" href="relatorios.css">
+</head>
+<body>
+  <!-- Header Padrão -->
+  <header class="header-padrao">
+    <div class="header-content">
+      <a href="/menu" class="logo">🌸 Habib Perfume Shop</a>
+      <nav class="nav-menu">
+        <a href="/menu">Início</a>
+        <a href="/cargo">Cargos</a>
+        <a href="/funcionario">Funcionários</a>
+        <a href="/cliente">Clientes</a>
+        <a href="/produto">Produtos</a>
+        <a href="./index.html" class="active">Relatórios</a>
+      </nav>
+      <div class="usuario-info">
+        <span id="nomeUsuario">Gerente</span>
+        <a href="#" onclick="logout()" class="btn btn-sm btn-outline">Sair</a>
+      </div>
+    </div>
+  </header>
+  
+  <main class="relatorios-page">
+    <div class="relatorios-container">
+      <div class="page-title-section">
+        <h1>📊 Central de Relatórios</h1>
+        <p class="subtitle">Selecione o relatório desejado para visualização ou impressão</p>
+      </div>
+      
+      <div class="relatorios-grid">
+        <!-- Relatório 1: Vendas por Período -->
+        <div class="card-relatorio">
+          <div class="card-icon">📈</div>
+          <h2>Vendas por Período</h2>
+          <p>Visualize o total de vendas realizadas em um mês específico, incluindo resumo financeiro e detalhamento por dia.</p>
+          
+          <form id="form-vendas-periodo" class="relatorio-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="mes">Mês:</label>
+                <select id="mes" name="mes">
+                  <option value="1">Janeiro</option>
+                  <option value="2">Fevereiro</option>
+                  <option value="3">Março</option>
+                  <option value="4">Abril</option>
+                  <option value="5">Maio</option>
+                  <option value="6">Junho</option>
+                  <option value="7">Julho</option>
+                  <option value="8">Agosto</option>
+                  <option value="9">Setembro</option>
+                  <option value="10">Outubro</option>
+                  <option value="11">Novembro</option>
+                  <option value="12">Dezembro</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="ano">Ano:</label>
+                <select id="ano" name="ano">
+                  <option value="2024">2024</option>
+                  <option value="2025">2025</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">🔍 Gerar Relatório</button>
+          </form>
+        </div>
+
+        <!-- Relatório 2: Produtos Mais Vendidos -->
+        <div class="card-relatorio">
+          <div class="card-icon">🏆</div>
+          <h2>Produtos Mais Vendidos</h2>
+          <p>Ranking dos produtos mais vendidos com informações de faturamento e estoque.</p>
+          
+          <form id="form-produtos" class="relatorio-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="limite">Quantidade:</label>
+                <select id="limite" name="limite">
+                  <option value="5">Top 5</option>
+                  <option value="10" selected>Top 10</option>
+                  <option value="20">Top 20</option>
+                  <option value="50">Top 50</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="periodo">Período:</label>
+                <select id="periodo" name="periodo">
+                  <option value="">Todos os tempos</option>
+                  <option value="7">Últimos 7 dias</option>
+                  <option value="30">Últimos 30 dias</option>
+                  <option value="90">Últimos 90 dias</option>
+                  <option value="365">Último ano</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">🔍 Gerar Relatório</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Área de Resultado -->
+      <div id="resultado-area" class="resultado-area hidden">
+        <div class="resultado-header">
+          <h2 id="resultado-titulo">Resultado</h2>
+          <button id="btn-imprimir" class="btn btn-secondary">🖨️ Imprimir</button>
+        </div>
+        <div id="resultado-conteudo"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer Padrão -->
+  <footer class="footer-padrao">
+    <p>&copy; 2025 - Habib Perfume Shop - Relatórios Gerenciais</p>
+  </footer>
+
+  <script>
+    const API_BASE_URL = 'http://localhost:3001';
+
+    function logout() {
+      localStorage.removeItem('usuario');
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    
+    // Carregar nome do usuário
+    document.addEventListener('DOMContentLoaded', () => {
+      const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+      const nomeEl = document.getElementById('nomeUsuario');
+      if (nomeEl && usuario.nome) {
+        nomeEl.textContent = usuario.nome;
+      }
+    });
+
+    // Define mês/ano atual
+    const dataAtual = new Date();
+    document.getElementById('mes').value = dataAtual.getMonth() + 1;
+    document.getElementById('ano').value = dataAtual.getFullYear();
+
+    // Relatório de Vendas por Período
+    document.getElementById('form-vendas-periodo').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const mes = document.getElementById('mes').value;
+      const ano = document.getElementById('ano').value;
+      
+      try {
+        const res = await fetch(`${API_BASE_URL}/relatorio/vendas-periodo?mes=${mes}&ano=${ano}`, { credentials: 'include' });
+        const data = await res.json();
+        exibirRelatorioVendas(data);
+      } catch (error) {
+        alert('Erro ao gerar relatório: ' + error.message);
+      }
+    });
+
+    // Relatório de Produtos Mais Vendidos
+    document.getElementById('form-produtos').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const limite = document.getElementById('limite').value;
+      const periodo = document.getElementById('periodo').value;
+      
+      let url = `${API_BASE_URL}/relatorio/produtos-mais-vendidos?limite=${limite}`;
+      if (periodo) url += `&periodo=${periodo}`;
+      
+      try {
+        const res = await fetch(url, { credentials: 'include' });
+        const data = await res.json();
+        exibirRelatorioProdutos(data);
+      } catch (error) {
+        alert('Erro ao gerar relatório: ' + error.message);
+      }
+    });
+
+    function exibirRelatorioVendas(data) {
+      const area = document.getElementById('resultado-area');
+      const titulo = document.getElementById('resultado-titulo');
+      const conteudo = document.getElementById('resultado-conteudo');
+      
+      titulo.textContent = `📈 Vendas de ${data.periodo.nome_mes} / ${data.periodo.ano}`;
+      
+      let html = `
+        <div class="relatorio-print" id="relatorio-para-imprimir">
+          <div class="relatorio-cabecalho">
+            <h1>🌸 Habib Perfume Shop</h1>
+            <h2>Relatório de Vendas por Período</h2>
+            <p>${data.periodo.nome_mes} de ${data.periodo.ano}</p>
+            <p class="data-geracao">Gerado em: ${new Date(data.gerado_em).toLocaleString('pt-BR')}</p>
+          </div>
+          
+          <div class="resumo-box">
+            <h3>📊 Resumo do Período</h3>
+            <div class="resumo-grid">
+              <div class="resumo-item">
+                <span class="label">Total de Pedidos</span>
+                <span class="valor">${data.resumo.total_pedidos}</span>
+              </div>
+              <div class="resumo-item">
+                <span class="label">Pedidos Pagos</span>
+                <span class="valor">${data.resumo.pedidos_pagos}</span>
+              </div>
+              <div class="resumo-item">
+                <span class="label">Clientes Distintos</span>
+                <span class="valor">${data.resumo.clientes_distintos}</span>
+              </div>
+              <div class="resumo-item destaque">
+                <span class="label">Total Arrecadado</span>
+                <span class="valor">R$ ${parseFloat(data.resumo.valor_total_arrecadado).toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+          
+          <h3>📅 Vendas por Dia</h3>
+          <table class="tabela-relatorio">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Qtd. Pedidos</th>
+                <th>Valor Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.vendas_por_dia.length > 0 
+                ? data.vendas_por_dia.map(d => `
+                  <tr>
+                    <td>${new Date(d.dia).toLocaleDateString('pt-BR')}</td>
+                    <td>${d.qtd_pedidos}</td>
+                    <td>R$ ${parseFloat(d.valor_dia).toFixed(2)}</td>
+                  </tr>
+                `).join('')
+                : '<tr><td colspan="3" class="sem-dados">Nenhuma venda no período</td></tr>'
+              }
+            </tbody>
+          </table>
+          
+          <h3>📋 Detalhamento dos Pedidos</h3>
+          <table class="tabela-relatorio">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Data</th>
+                <th>Cliente</th>
+                <th>CPF</th>
+                <th>Valor</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.detalhes.length > 0
+                ? data.detalhes.map(d => `
+                  <tr>
+                    <td>${d.id_pedido}</td>
+                    <td>${new Date(d.data_pedido).toLocaleDateString('pt-BR')}</td>
+                    <td>${d.nome_cliente}</td>
+                    <td>${d.cpf_cliente || '-'}</td>
+                    <td>R$ ${parseFloat(d.valor_total).toFixed(2)}</td>
+                    <td><span class="badge ${d.status_pagamento === 'Pago' ? 'badge-success' : 'badge-warning'}">${d.status_pagamento}</span></td>
+                  </tr>
+                `).join('')
+                : '<tr><td colspan="6" class="sem-dados">Nenhum pedido no período</td></tr>'
+              }
+            </tbody>
+          </table>
+        </div>
+      `;
+      
+      conteudo.innerHTML = html;
+      area.classList.remove('hidden');
+      area.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function exibirRelatorioProdutos(data) {
+      const area = document.getElementById('resultado-area');
+      const titulo = document.getElementById('resultado-titulo');
+      const conteudo = document.getElementById('resultado-conteudo');
+      
+      titulo.textContent = `🏆 Produtos Mais Vendidos - ${data.periodo}`;
+      
+      let html = `
+        <div class="relatorio-print" id="relatorio-para-imprimir">
+          <div class="relatorio-cabecalho">
+            <h1>🌸 Habib Perfume Shop</h1>
+            <h2>Relatório de Produtos Mais Vendidos</h2>
+            <p>Período: ${data.periodo}</p>
+            <p class="data-geracao">Gerado em: ${new Date(data.gerado_em).toLocaleString('pt-BR')}</p>
+          </div>
+          
+          <div class="resumo-box">
+            <h3>📊 Resumo Geral</h3>
+            <div class="resumo-grid">
+              <div class="resumo-item">
+                <span class="label">Produtos Vendidos</span>
+                <span class="valor">${data.resumo.produtos_vendidos}</span>
+              </div>
+              <div class="resumo-item">
+                <span class="label">Unidades Vendidas</span>
+                <span class="valor">${data.resumo.unidades_vendidas}</span>
+              </div>
+              <div class="resumo-item">
+                <span class="label">Total de Pedidos</span>
+                <span class="valor">${data.resumo.total_pedidos}</span>
+              </div>
+              <div class="resumo-item destaque">
+                <span class="label">Faturamento Total</span>
+                <span class="valor">R$ ${parseFloat(data.resumo.faturamento_total).toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+          
+          <h3>🏆 Ranking de Vendas</h3>
+          <table class="tabela-relatorio">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Produto</th>
+                <th>Marca</th>
+                <th>Qtd. Vendida</th>
+                <th>Faturamento</th>
+                <th>Preço Médio</th>
+                <th>Estoque Atual</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.ranking.map((p, i) => `
+                <tr class="${i < 3 ? 'top-' + (i + 1) : ''}">
+                  <td class="posicao">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td>
+                  <td>${p.nome_produto}</td>
+                  <td>${p.marca_produto || '-'}</td>
+                  <td>${p.total_vendido}</td>
+                  <td>R$ ${parseFloat(p.faturamento_total).toFixed(2)}</td>
+                  <td>R$ ${parseFloat(p.preco_medio_venda).toFixed(2)}</td>
+                  <td><span class="${p.estoque_atual < 10 ? 'badge badge-danger' : 'badge badge-success'}">${p.estoque_atual}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          
+          ${data.produtos_sem_venda.length > 0 ? `
+            <h3>⚠️ Produtos Sem Venda</h3>
+            <p class="aviso">Os produtos abaixo não tiveram nenhuma venda registrada:</p>
+            <table class="tabela-relatorio">
+              <thead>
+                <tr>
+                  <th>Produto</th>
+                  <th>Marca</th>
+                  <th>Preço</th>
+                  <th>Estoque</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.produtos_sem_venda.slice(0, 10).map(p => `
+                  <tr>
+                    <td>${p.nome_produto}</td>
+                    <td>${p.marca_produto || '-'}</td>
+                    <td>R$ ${parseFloat(p.preco_produto).toFixed(2)}</td>
+                    <td>${p.quantidade_estoque}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          ` : ''}
+        </div>
+      `;
+      
+      conteudo.innerHTML = html;
+      area.classList.remove('hidden');
+      area.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Botão de Imprimir
+    document.getElementById('btn-imprimir').addEventListener('click', () => {
+      window.print();
+    });
+  </script>
+</body>
+</html>

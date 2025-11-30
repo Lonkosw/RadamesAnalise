@@ -1,118 +1,205 @@
-/* Reset básico */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+/**
+ * ============================================
+ * MENU.CSS - Estilos do Menu Principal
+ * Complementa o global.css
+ * ============================================
+ */
+
+/* ============================================
+   SEÇÕES / CATÁLOGO
+   ============================================ */
+
+.catalogo {
+    padding-bottom: 50px;
 }
 
-body {
-    font-family: Arial, sans-serif;
-    background: white;
-    color: #333;
+.sec-title {
     text-align: center;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 32px;
+    position: relative;
 }
 
-/* Cabeçalho */
-header {
-    padding: 0rem 0rem 0rem 0rem;
-    background-color: aquamarine;
+.sec-title::after {
+    content: '';
+    display: block;
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-success));
+    margin: 16px auto 0;
+    border-radius: 2px;
 }
 
-header h1 {
-    margin-bottom: 0rem;
-    font-size: 1.8rem;
-    color: #1a5d3c;
-}
+/* ============================================
+   GRID DE PRODUTOS
+   ============================================ */
 
-.topo {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-family: Arial, sans-serif;
-    font-size: 16px;
-    padding: 0.1rem 1.5rem 1.5rem 0.1rem;
-}
-
-.topo h3 {
+.produtos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 24px;
     margin: 0;
 }
 
-/* Menu principal */
-.nav {
-    background: linear-gradient(90deg, aquamarine, green);
-    padding: 0.5rem 0;
-    position: relative;
-    z-index: 1000;
+@media (min-width: 1100px) {
+    .produtos-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
 }
 
-.nav__menu {
-    list-style: none;
+/* ============================================
+   CARD DE PRODUTO
+   ============================================ */
+
+.produto-card {
+    background-color: var(--bg-white);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
     display: flex;
-    justify-content: center;
-    gap: 2rem;
-}
-
-.nav__menu-item {
+    flex-direction: column;
     position: relative;
+    overflow: hidden;
+    transition: var(--transition-base);
 }
 
-.nav__menu-item a {
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
-    padding: 0.5rem 1rem;
+.produto-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-6px);
+}
+
+.produto-card .produto-img {
+    padding: 16px 16px 0;
+}
+
+.produto-card .produto-img img {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+    background: linear-gradient(145deg, var(--bg-light), var(--border-color));
     display: block;
+    transition: transform 0.3s ease;
 }
 
-/* Submenu */
-.nav__submenu {
-    list-style: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    background: white;
-    border: 1px solid #ccc;
-    display: none;
-    min-width: 180px;
-    text-align: left;
-    z-index: 2000;
-    box-shadow: 0 6px 20px rgba(0,0,0,.15);
+.produto-card:hover .produto-img img {
+    transform: scale(1.05);
 }
 
-.nav__submenu-item a {
-    color: #1a5d3c;
-    padding: 0.5rem 1rem;
-    display: block;
+.produto-card .produto-info {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 6px;
+    flex: 1;
 }
 
-.nav__submenu-item a:hover {
-    background: aquamarine;
+.produto-card .produto-nome {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.3;
+    font-weight: 600;
+    color: var(--text-primary);
+    max-height: 2.6em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
-/* Hover para mostrar submenu */
-.nav__menu-item:hover .nav__submenu {
-    display: block;
+.produto-card .produto-meta {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.2;
 }
 
-/* Botão */
-button {
-    margin: 2rem;
-    padding: 0.5rem 1.5rem;
-    background: green;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+.produto-card .produto-volume {
+    margin: 0;
+    font-size: 0.7rem;
+    color: var(--text-muted);
 }
 
-button:hover {
-    background: darkgreen;
+.produto-card .produto-preco {
+    margin-top: auto;
+    padding-top: 12px;
+    font-weight: 700;
+    color: var(--color-success);
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
 }
 
-/* Rodapé */
-footer {
-    margin-top: 2rem;
-    padding: 1rem;
-    background: #f0f0f0;
+.produto-card .produto-acoes {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.produto-card .produto-acoes .btn {
+    flex: 1;
+}
+
+/* ============================================
+   TOAST / FEEDBACK
+   ============================================ */
+
+#toast-box {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 9999;
+}
+
+#toast-box .toast {
+    background-color: var(--text-primary);
+    color: var(--text-white);
+    padding: 14px 20px;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    box-shadow: var(--shadow-lg);
+}
+
+#toast-box .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#toast-box .toast-success {
+    background-color: var(--color-success);
+}
+
+#toast-box .toast-warning {
+    background-color: var(--color-warning);
+    color: var(--text-primary);
+}
+
+#toast-box .toast-danger {
+    background-color: var(--color-danger);
+}
+
+/* ============================================
+   RESPONSIVIDADE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .produtos-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .produtos-grid {
+        grid-template-columns: 1fr;
+    }
 }
 

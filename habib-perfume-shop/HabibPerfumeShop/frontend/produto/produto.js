@@ -7,9 +7,16 @@ const fb = document.getElementById('fb');
 const totalBadge = document.getElementById('totalBadge');
 const inpImagem = document.getElementById('inpImagem');
 const previewImg = document.getElementById('previewImg');
+const secForm = document.getElementById('secForm');
 
 let cache = [];
 let editingId = null;
+
+// Logout global
+window.logout = function() {
+  document.cookie = 'usuarioLogado=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+  window.location.href = '/login/login.html';
+};
 
 async function diagnosticoInicial(){
   try {
@@ -30,9 +37,12 @@ async function carregar(){
   const ok = await diagnosticoInicial();
   if(!ok){ cache=[]; render(); return; }
   const params = new URLSearchParams();
-  const q = fBusca.value.trim(); if(q) params.append('q', q);
-  const min = fMin.value.trim(); if(min) params.append('min_preco', min);
-  const max = fMax.value.trim(); if(max) params.append('max_preco', max);
+  const fBusca = document.getElementById('fBusca');
+  const fMin = document.getElementById('fMin');
+  const fMax = document.getElementById('fMax');
+  const q = fBusca?.value?.trim(); if(q) params.append('q', q);
+  const min = fMin?.value?.trim(); if(min) params.append('min_preco', min);
+  const max = fMax?.value?.trim(); if(max) params.append('max_preco', max);
   const url = params.toString()? `${API}?${params.toString()}` : API;
   try{
     const r = await fetch(url, { credentials:'include' });
@@ -45,7 +55,7 @@ async function carregar(){
       const data = await r.json();
       cache = Array.isArray(data) ? data : [];
     }
-    totalBadge.textContent = (cache||[]).length;
+    totalBadge.textContent = (cache||[]).length + ' produtos';
     render();
   }catch(e){
     feedback(fb, 'Erro de rede ao carregar', false);
@@ -54,19 +64,53 @@ async function carregar(){
 }
 
 function render(){
-  buildTable(lista, {
-    columns:[
-      {label:'ID', field:'id_produto'},
-      {label:'Nome', field:'nome_produto'},
-      {label:'Marca', field:'marca_produto'},
-      {label:'Vol', field:'volume_ml'},
-      {label:'Conc', field:'concentracao'},
-      {label:'Preço', field:'preco_produto'},
-      {label:'Estoque', field:'quantidade_estoque'}
-    ],
-    data: cache,
-    onEdit:(row)=>{ editingId=row.id_produto; const adapt = mapRow(row); fillForm(form, adapt); carregarImagemExistente(editingId); window.scrollTo({top:0,behavior:'smooth'}); },
-    onDelete:(row)=>{ if(confirm('Remover produto '+ (row.nome_produto||'') +'?')) remover(row.id_produto); }
+  // Renderiza como cards em vez de tabela
+  lista.innerHTML = '';
+  
+  if(!cache || cache.length === 0) {
+    lista.innerHTML = '<p class="text-muted text-center" style="grid-column:1/-1;padding:40px;">Nenhum produto encontrado</p>';
+    return;
+  }
+  
+  cache.forEach(row => {
+    const card = document.createElement('div');
+    card.className = 'produto-item';
+    const preco = Number(row.preco_produto || 0).toFixed(2).replace('.', ',');
+    const estoque = row.quantidade_estoque || 0;
+    const estoqueClass = estoque > 10 ? 'text-success' : estoque > 0 ? 'text-warning' : 'text-danger';
+    
+    card.innerHTML = `
+      <img src="/imagens-produtos/${row.id_produto}.png" alt="${row.nome_produto || ''}" class="produto-item-img" onerror="this.src='/imagens-produtos/default.png'">
+      <div class="produto-item-info">
+        <h3 class="produto-item-nome">${row.nome_produto || 'Sem nome'}</h3>
+        <p class="produto-item-meta">${[row.marca_produto, row.concentracao].filter(Boolean).join(' • ') || '-'}</p>
+        <div class="produto-item-preco">R$ ${preco}</div>
+        <p class="produto-item-estoque ${estoqueClass}">Estoque: ${estoque} unidades</p>
+        <div class="produto-item-acoes">
+          <button class="btn btn-sm btn-warning btn-editar">✏️ Editar</button>
+          <button class="btn btn-sm btn-danger btn-excluir">🗑️</button>
+        </div>
+      </div>
+    `;
+    
+    card.querySelector('.btn-editar').addEventListener('click', () => {
+      editingId = row.id_produto;
+      const adapt = mapRow(row);
+      fillForm(form, adapt);
+      carregarImagemExistente(editingId);
+      document.getElementById('tituloForm').textContent = 'Editar Produto';
+      document.getElementById('btnExcluir').hidden = false;
+      secForm?.classList.remove('hidden');
+      window.scrollTo({top: secForm?.offsetTop || 0, behavior:'smooth'});
+    });
+    
+    card.querySelector('.btn-excluir').addEventListener('click', () => {
+      if(confirm('Remover produto ' + (row.nome_produto || '') + '?')) {
+        remover(row.id_produto);
+      }
+    });
+    
+    lista.appendChild(card);
   });
 }
 
@@ -86,9 +130,25 @@ function mapRow(r){
 async function remover(id){
   try{
     const r = await fetch(`${API}/${id}`, {method:'DELETE', credentials:'include'});
-    if(!r.ok) throw new Error('Falha ao remover');
-    feedback(fb,'Removido',true); await carregar(); clear(form); editingId=null; resetPreview();
-  }catch(e){ feedback(fb, e.message, false); }
+    if(!r.ok) {
+      let msg = 'Falha ao remover';
+      try {
+        const data = await r.json();
+        msg = data.error || data.message || msg;
+      } catch(e) {}
+      throw new Error(msg);
+    }
+    feedback(fb,'Produto removido com sucesso!',true); 
+    await carregar(); 
+    clear(form); 
+    editingId=null; 
+    resetPreview();
+    secForm?.classList.add('hidden');
+    document.getElementById('btnExcluir').hidden = true;
+  }catch(e){ 
+    feedback(fb, e.message, false); 
+    alert('Erro ao remover: ' + e.message);
+  }
 }
 
 form.addEventListener('submit', async e=>{
@@ -124,8 +184,37 @@ form.addEventListener('submit', async e=>{
 });
 
 btnFiltrar.addEventListener('click', carregar);
-btnLimpar.addEventListener('click', ()=>{ fBusca.value=''; fMin.value=''; fMax.value=''; carregar(); });
-btnNovo.addEventListener('click', ()=>{ editingId=null; clear(form); feedback(fb,'',true); form.id_produto.value=''; resetPreview(); window.scrollTo({top:0,behavior:'smooth'}); });
+btnLimpar.addEventListener('click', ()=>{ 
+  document.getElementById('fBusca').value=''; 
+  document.getElementById('fMin').value=''; 
+  document.getElementById('fMax').value=''; 
+  carregar(); 
+});
+btnNovo.addEventListener('click', ()=>{ 
+  editingId=null; 
+  clear(form); 
+  feedback(fb,'',true); 
+  document.querySelector('[name="id_produto"]').value=''; 
+  resetPreview(); 
+  document.getElementById('tituloForm').textContent = 'Novo Produto';
+  secForm?.classList.remove('hidden');
+  window.scrollTo({top:secForm?.offsetTop || 0, behavior:'smooth'}); 
+});
+
+// Cancelar
+document.getElementById('btnCancelar')?.addEventListener('click', () => {
+  secForm?.classList.add('hidden');
+  editingId = null;
+  clear(form);
+  resetPreview();
+});
+
+// Excluir
+document.getElementById('btnExcluir')?.addEventListener('click', () => {
+  if(editingId && confirm('Remover este produto?')) {
+    remover(editingId);
+  }
+});
 
 inpImagem?.addEventListener('change', async ()=>{
   const f = inpImagem.files && inpImagem.files[0];

@@ -1,0 +1,459 @@
+/**
+ * ============================================
+ * RELATORIOS.CSS - Estilos da Página de Relatórios
+ * Complementa o global.css padronizado
+ * ============================================
+ */
+
+/* ============================================
+   PÁGINA PRINCIPAL
+   ============================================ */
+
+.relatorios-page {
+    min-height: 100vh;
+    padding-top: 100px;
+    padding-bottom: 40px;
+}
+
+.relatorios-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.page-title-section {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.page-title-section h1 {
+    font-size: 2rem;
+    color: var(--text-primary);
+    margin: 0 0 8px;
+}
+
+.subtitle {
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* ============================================
+   GRID DE CARDS DE RELATÓRIOS
+   ============================================ */
+
+.relatorios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.card-relatorio {
+    background-color: var(--bg-white);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+    transition: var(--transition-base);
+}
+
+.card-relatorio:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.card-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+}
+
+.card-relatorio h2 {
+    color: var(--text-primary);
+    margin: 0 0 8px;
+    font-size: 1.25rem;
+}
+
+.card-relatorio > p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0 0 20px;
+}
+
+/* ============================================
+   FORMULÁRIOS DE RELATÓRIO
+   ============================================ */
+
+.relatorio-form .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.relatorio-form .form-group {
+    margin-bottom: 0;
+}
+
+.relatorio-form .form-group label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.relatorio-form .form-group select,
+.relatorio-form .form-group input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-family: inherit;
+    transition: var(--transition-base);
+    background-color: var(--bg-white);
+}
+
+.relatorio-form .form-group select:focus,
+.relatorio-form .form-group input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(139, 75, 139, 0.15);
+}
+
+.btn-block {
+    width: 100%;
+}
+
+/* ============================================
+   ÁREA DE RESULTADO
+   ============================================ */
+
+.resultado-area {
+    background-color: var(--bg-white);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+    margin-top: 24px;
+}
+
+.resultado-area.hidden {
+    display: none;
+}
+
+.resultado-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.resultado-header h2 {
+    color: var(--text-primary);
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+/* ============================================
+   RELATÓRIO PARA IMPRESSÃO
+   ============================================ */
+
+.relatorio-print {
+    background-color: var(--bg-white);
+}
+
+.relatorio-cabecalho {
+    text-align: center;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 3px solid var(--color-primary);
+}
+
+.relatorio-cabecalho h1 {
+    color: var(--color-primary);
+    margin: 0 0 4px;
+    font-size: 1.75rem;
+}
+
+.relatorio-cabecalho h2 {
+    color: var(--text-secondary);
+    font-weight: normal;
+    margin: 0 0 8px;
+    font-size: 1.125rem;
+}
+
+.relatorio-cabecalho p {
+    color: var(--text-secondary);
+    margin: 4px 0;
+}
+
+.data-geracao {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* ============================================
+   BOX DE RESUMO
+   ============================================ */
+
+.resumo-box {
+    background: linear-gradient(135deg, var(--bg-light), var(--bg-body));
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.resumo-box h3 {
+    color: var(--text-primary);
+    margin: 0 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border-color);
+    font-size: 1.125rem;
+}
+
+.resumo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+}
+
+.resumo-item {
+    background-color: var(--bg-white);
+    padding: 16px;
+    border-radius: var(--radius-md);
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+}
+
+.resumo-item .label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.resumo-item .valor {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.resumo-item.destaque {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+}
+
+.resumo-item.destaque .label,
+.resumo-item.destaque .valor {
+    color: var(--text-white);
+}
+
+/* ============================================
+   TABELAS DE RELATÓRIO
+   ============================================ */
+
+h3 {
+    color: var(--text-primary);
+    margin: 20px 0 16px;
+    font-size: 1.125rem;
+}
+
+.tabela-relatorio {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+    font-size: 0.875rem;
+}
+
+.tabela-relatorio th,
+.tabela-relatorio td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tabela-relatorio th {
+    background-color: var(--color-primary);
+    color: var(--text-white);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.tabela-relatorio tbody tr:hover {
+    background-color: var(--bg-light);
+}
+
+.tabela-relatorio tbody tr:nth-child(even) {
+    background-color: var(--bg-body);
+}
+
+/* ============================================
+   BADGES
+   ============================================ */
+
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 15px;
+}
+
+.badge-success {
+    background-color: #D4EDDA;
+    color: #155724;
+}
+
+.badge-warning {
+    background-color: #FFF3CD;
+    color: #856404;
+}
+
+.badge-danger {
+    background-color: #F8D7DA;
+    color: #721C24;
+}
+
+/* ============================================
+   RANKING
+   ============================================ */
+
+.top-1 {
+    background: linear-gradient(90deg, rgba(255, 215, 0, 0.2), transparent) !important;
+}
+
+.top-2 {
+    background: linear-gradient(90deg, rgba(192, 192, 192, 0.2), transparent) !important;
+}
+
+.top-3 {
+    background: linear-gradient(90deg, rgba(205, 127, 50, 0.2), transparent) !important;
+}
+
+.posicao {
+    font-size: 1.125rem;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* ============================================
+   ESTADOS
+   ============================================ */
+
+.sem-dados {
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 24px !important;
+}
+
+.aviso {
+    color: var(--color-warning);
+    font-size: 0.875rem;
+    margin-bottom: 16px;
+}
+
+/* ============================================
+   ESTILOS DE IMPRESSÃO
+   ============================================ */
+
+@media print {
+    body {
+        background: white !important;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+    
+    .header-padrao,
+    .relatorios-grid,
+    #btn-imprimir,
+    .resultado-header,
+    .footer-padrao {
+        display: none !important;
+    }
+    
+    .relatorios-page {
+        padding-top: 0;
+    }
+    
+    .resultado-area {
+        box-shadow: none;
+        padding: 0;
+        border: none;
+    }
+    
+    .relatorios-container {
+        max-width: 100%;
+        padding: 0;
+    }
+    
+    .relatorio-print {
+        page-break-inside: avoid;
+    }
+    
+    .tabela-relatorio {
+        page-break-inside: auto;
+    }
+    
+    .tabela-relatorio tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+    
+    .tabela-relatorio th {
+        background: #222 !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact;
+    }
+    
+    .resumo-item.destaque {
+        background: var(--color-primary) !important;
+        -webkit-print-color-adjust: exact;
+    }
+    
+    h1, h2, h3 {
+        page-break-after: avoid;
+    }
+}
+
+/* ============================================
+   RESPONSIVIDADE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .relatorios-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .relatorio-form .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .resumo-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .tabela-relatorio {
+        font-size: 0.75rem;
+    }
+    
+    .tabela-relatorio th,
+    .tabela-relatorio td {
+        padding: 6px 8px;
+    }
+    
+    .resultado-header {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+    }
+}

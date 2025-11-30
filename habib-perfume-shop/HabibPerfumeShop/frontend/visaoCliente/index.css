@@ -1,0 +1,84 @@
+/* ============================================================================
+   index.css - Estilos da Área do Cliente - Habib Perfume Shop
+   Complementa o global.css
+   ============================================================================ */
+
+/* Boas vindas */
+.boas-vindas {
+    background: var(--bg-white);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    text-align: center;
+    margin-bottom: 32px;
+    box-shadow: var(--shadow-md);
+}
+
+.boas-vindas h2 {
+    color: var(--color-primary);
+    margin-bottom: 8px;
+}
+
+/* Ações rápidas */
+.acoes-rapidas {
+    background: var(--bg-white);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    box-shadow: var(--shadow-md);
+}
+
+.acoes-rapidas h3 {
+    text-align: center;
+    color: var(--text-primary);
+    margin-bottom: 24px;
+}
+
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 24px;
+}
+
+.action-card {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    color: var(--text-white);
+    padding: 32px;
+    border-radius: var(--radius-lg);
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition-base);
+}
+
+.action-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(139, 75, 139, 0.3);
+}
+
+.action-card .icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 16px;
+}
+
+.action-card h4 {
+    font-size: 1.25rem;
+    margin-bottom: 8px;
+    color: var(--text-white);
+}
+
+.action-card p {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .boas-vindas,
+    .acoes-rapidas {
+        padding: 20px;
+    }
+    
+    .cards-grid {
+        grid-template-columns: 1fr;
+    }
+}

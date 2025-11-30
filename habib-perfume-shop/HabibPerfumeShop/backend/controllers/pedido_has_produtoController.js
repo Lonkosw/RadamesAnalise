@@ -67,23 +67,48 @@ exports.criarPedido_has_produto = async (req, res) => {
 
 exports.criarItensPedidoEmLote = async (req, res) => {
   try {
-    const itens = req.body?.itens || [];
-    if (!Array.isArray(itens) || itens.length === 0) {
+    // Aceita {itens: [...]} ou array diretamente [...]
+    let itens = req.body?.itens || req.body;
+    if (!Array.isArray(itens)) {
+      itens = [];
+    }
+    
+    if (itens.length === 0) {
       return res.status(400).json({ error: 'Nenhum item enviado' });
     }
+    
     const values = [];
     const params = [];
     let i = 1;
     for (const it of itens) {
-      params.push(it.pedido_id_pedido, it.produto_id_produto, it.quantidade, it.preco_unitario);
+      // Suporta múltiplos nomes de campos
+      const pedidoId = it.pedido_id_pedido || it.id_pedido;
+      const produtoId = it.produto_id_produto || it.id_produto;
+      const quantidade = it.quantidade;
+      const precoUnit = it.preco_unitario || it.preco;
+      
+      if (!pedidoId || !produtoId || !quantidade || !precoUnit) {
+        console.error('Item inválido:', it);
+        continue;
+      }
+      
+      params.push(pedidoId, produtoId, quantidade, precoUnit);
       values.push(`($${i++}, $${i++}, $${i++}, $${i++})`);
     }
+    
+    if (values.length === 0) {
+      return res.status(400).json({ error: 'Nenhum item válido para inserir' });
+    }
+    
     const sql = 'INSERT INTO pedido_has_produto (pedido_id_pedido, produto_id_produto, quantidade, preco_unitario) VALUES ' + values.join(', ') + ' RETURNING *';
+    console.log('SQL lote:', sql);
+    console.log('Params:', params);
+    
     const result = await query(sql, params);
     res.status(201).json(result.rows);
   } catch (error) {
     console.error('Erro ao criar itens em lote:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Erro interno do servidor', detalhes: error.message });
   }
 };
 

@@ -1,224 +1,314 @@
 <!DOCTYPE html>
-<html lang="pt-br">
-
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Menu Principal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Habib Perfume Shop - Menu Principal</title>
+  <link rel="stylesheet" href="/styles/global.css">
   <link rel="stylesheet" href="/menu.css">
 </head>
-
 <body>
-  <header>
-    <div class="topo">
-      <h3>Menu Principal</h3>
-    </div>
+  <!-- Header Padrão -->
+  <header class="header-padrao">
+    <div class="header-content">
+      <a href="/menu" class="logo">🌸 Habib Perfume Shop</a>
+      
+      <nav>
+        <ul class="nav-menu" id="navMenu">
+          <li><a href="/menu">🏠 Home</a></li>
+        </ul>
+      </nav>
 
-    <nav class="nav">
-      <ul class="nav__menu" id="navMenu">
-        <!-- Construído via JS -->
-      </ul>
-    </nav>
+      <div class="usuario-info">
+        <span id="nomeUsuario">Carregando...</span>
+        <a href="#" onclick="logout()" class="btn btn-sm btn-outline">Sair</a>
+      </div>
+    </div>
   </header>
 
-  <main class="page-container">
+  <main class="container" style="padding-top: 32px; padding-bottom: 32px;">
+    <!-- Catálogo de Produtos -->
     <section class="catalogo">
-      <h2 class="sec-title">Produtos</h2>
-      <div id="produtosGrid" class="perfumes-grid"></div>
+      <h2 class="sec-title">🌹 Nossos Perfumes</h2>
+      <div id="produtosGrid" class="produtos-grid">
+        <p class="text-muted text-center">Carregando produtos...</p>
+      </div>
     </section>
   </main>
 
-  <footer>
-    <p>&copy; 2025 - Meu Site</p>
+  <!-- Footer Padrão -->
+  <footer class="footer-padrao">
+    <p>&copy; 2025 Habib Perfume Shop - Todos os direitos reservados</p>
   </footer>
+
+  <!-- Toast -->
+  <div id="toast-box"></div>
 
   <script>
     const API_BASE_URL = 'http://localhost:3001';
     const navMenu = document.getElementById('navMenu');
     const grid = document.getElementById('produtosGrid');
 
-    const LINKS_PUBLICOS = [
-      { label:'Home', href:'#' }
+    // ==================== MENUS ====================
+    
+    // Menu do CLIENTE
+    const MENU_CLIENTE = [
+      { label: '🏠 Home', href: '/menu' },
+      { label: '🛒 Carrinho', href: '/visaoCliente/carrinho/carrinho.html' },
+      { label: '📦 Meus Pedidos', href: '/visaoCliente/pedidos/pedidos.html' }
     ];
 
-    const LINKS_FUNCIONARIO = [
-      { label:'Produtos', href: API_BASE_URL + '/produto/abrirCrudProduto' },
-      { label:'Clientes', href: API_BASE_URL + '/cliente/crud' },
-      { label:'Pedidos', href: API_BASE_URL + '/pedido/crud' },
-      { label:'Formas Pagamento', href: API_BASE_URL + '/forma_pagamento/abrirCrudForma_pagamento' },
-      { label:'Pedido-Produtos', href: API_BASE_URL + '/pedido_has_produto/abrirCrudPedido_has_produto' }
-    ];
-
-    // Somente gerente
-    const LINKS_GERENTE_EXTRA = [
-      { label:'Funcionários', href: API_BASE_URL + '/funcionario/crud' }
-    ];
-
-    function renderMenu(usuario){
-      navMenu.innerHTML='';
-      // público base
-      LINKS_PUBLICOS.forEach(l => navMenu.appendChild(criaItem(l.label,l.href)));
-
-      // Cliente: no modelo B não há carrinho/checkout; manter apenas pedidos
-      if(usuario && usuario.tipo==='cliente'){
-        navMenu.appendChild(criaItem('Meus Pedidos','/pedido/lista.html'));
+    // Menu do GERENTE (somente CRUDs permitidos)
+    const MENU_GERENTE = [
+      { label: '🏠 Home', href: '/menu' },
+      { 
+        label: '⚙️ Cadastros', 
+        submenu: [
+          { label: '📋 Cargos', href: '/cargo/abrirCrudCargo' },
+          { label: '👔 Funcionários', href: '/funcionario/abrirCrudFuncionario' },
+          { label: '👥 Clientes', href: '/cliente/abrirCrudCliente' },
+          { label: '🧴 Produtos', href: '/produto/abrirCrudProduto' }
+        ]
+      },
+      { 
+        label: '📊 Relatórios', 
+        submenu: [
+          { label: '📈 Vendas por Período', href: '/relatorios/index.html' },
+          { label: '🏆 Produtos Mais Vendidos', href: '/relatorios/index.html' }
+        ]
       }
-      if(usuario && usuario.tipo==='funcionario'){
-        const group = document.createElement('li');
-        group.className='nav__menu-item';
-        group.innerHTML = '<a href="#">CRUDs</a>';
-        const ul = document.createElement('ul'); ul.className='nav__submenu';
-        LINKS_FUNCIONARIO.forEach(l=> ul.appendChild(criaSubItem(l.label,l.href)));
-        if(usuario.gerente || (usuario.cargo||'').toLowerCase().includes('gerente')){
-          LINKS_GERENTE_EXTRA.forEach(l=> ul.appendChild(criaSubItem(l.label,l.href)));
+    ];
+
+    // ==================== RENDER MENU ====================
+    
+    function renderMenu(usuario) {
+      navMenu.innerHTML = '';
+      
+      let menuItems = [];
+      
+      if (!usuario) {
+        menuItems = [{ label: '🏠 Home', href: '/menu' }];
+      } else if (usuario.tipo === 'cliente') {
+        menuItems = MENU_CLIENTE;
+      } else if (usuario.tipo === 'funcionario') {
+        menuItems = MENU_GERENTE;
+      }
+
+      menuItems.forEach(item => {
+        const li = document.createElement('li');
+        
+        if (item.submenu) {
+          li.innerHTML = `<a href="#">${item.label}</a>`;
+          const ul = document.createElement('ul');
+          ul.className = 'nav-submenu';
+          item.submenu.forEach(sub => {
+            const subLi = document.createElement('li');
+            subLi.innerHTML = `<a href="${sub.href}">${sub.label}</a>`;
+            ul.appendChild(subLi);
+          });
+          li.appendChild(ul);
+        } else {
+          li.innerHTML = `<a href="${item.href}">${item.label}</a>`;
         }
-        group.appendChild(ul);
-        navMenu.appendChild(group);
+        
+        navMenu.appendChild(li);
+      });
+
+      // Atualiza nome do usuário
+      const nomeEl = document.getElementById('nomeUsuario');
+      if (usuario) {
+        nomeEl.textContent = `Olá, ${usuario.nome || usuario.tipo}`;
+      } else {
+        nomeEl.textContent = 'Visitante';
       }
     }
 
-    function criaItem(text, href, action){
-      const li = document.createElement('li'); li.className='nav__menu-item';
-      const a = document.createElement('a'); a.textContent=text; a.href=href || '#';
-      if(action==='abrirCarrinho'){ a.onclick = (e)=>{ e.preventDefault(); abrirCarrinho(); }; }
-      li.appendChild(a); return li;
-    }
-    function criaSubItem(text, href){
-      const li = document.createElement('li'); li.className='nav__submenu-item';
-      const a = document.createElement('a'); a.textContent=text; a.href=href; li.appendChild(a); return li;
-    }
+    // ==================== AUTENTICAÇÃO ====================
+    
+    let _usuarioCache = null;
 
     async function carregarUsuario() {
       try {
         const res = await fetch(API_BASE_URL + '/login/status', { credentials: 'include' });
         const data = await res.json();
+        
         if (data.status === 'ok') {
-          const u = data.usuario;
-            _usuarioCache = u; // garantir cache para render dos botões
-            renderMenu(u);
-            // Carregar perfumes também quando logado
-            carregarProdutos();
-        } else {
-          // não logado → redireciona para login (pode opcionalmente carregar vitrine pública antes)
+          _usuarioCache = data.usuario;
+          renderMenu(_usuarioCache);
           carregarProdutos();
+        } else {
           window.location.href = '/login/login.html';
         }
       } catch (e) {
-        console.error('Falha ao obter status de login', e);
+        console.error('Erro ao verificar login:', e);
         window.location.href = '/login/login.html';
       }
     }
 
-    carregarUsuario();
-
-    async function carregarProdutos(){
-      try{
-        const r = await fetch(API_BASE_URL + '/produto');
-        if(!r.ok) return;
-        const lista = await r.json();
-        grid.innerHTML='';
-        lista.forEach(p=> grid.appendChild(cardProduto(p)) );
-      }catch(e){ console.error('Erro carregando produtos', e); }
+    function logout() {
+      document.cookie = 'usuarioLogado=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      window.location.href = '/login/login.html';
     }
 
-    function cardProduto(p){
+    // ==================== PRODUTOS ====================
+    
+    async function carregarProdutos() {
+      try {
+        const r = await fetch(API_BASE_URL + '/produto');
+        if (!r.ok) return;
+        const lista = await r.json();
+        
+        grid.innerHTML = '';
+        
+        if (lista.length === 0) {
+          grid.innerHTML = '<p class="text-muted text-center">Nenhum produto disponível</p>';
+          return;
+        }
+        
+        lista.forEach(p => grid.appendChild(cardProduto(p)));
+      } catch (e) {
+        console.error('Erro ao carregar produtos:', e);
+        grid.innerHTML = '<p class="text-danger text-center">Erro ao carregar produtos</p>';
+      }
+    }
+
+    function cardProduto(p) {
       const div = document.createElement('div');
-      div.className='perfume-card';
-      const preco = Number(p.preco_produto||p.preco||0).toFixed(2).replace('.',',');
+      div.className = 'produto-card';
+      
       const id = p.id_produto;
-      const holderId = 'imgph_'+id;
-      const marcaLinha = (p.marca_produto||p.marca||'').trim();
-      const metaLinha = [marcaLinha, p.concentracao||''].filter(Boolean).join(' • ');
-      const mlLinha = p.volume_ml? (p.volume_ml+ ' ml') : '';
+      const nome = p.nome_produto || p.nome || 'Sem nome';
+      const preco = Number(p.preco_produto || p.preco || 0).toFixed(2).replace('.', ',');
+      const marca = p.marca_produto || p.marca || '';
+      const volume = p.volume_ml ? `${p.volume_ml} ml` : '';
+      const concentracao = p.concentracao || '';
+      
       div.innerHTML = `
-        <div class="img-wrap"><div class="img-holder" id="${holderId}">IMG</div></div>
-        <div class="info">
-          <h3 class="nome" title="${p.nome_produto||p.nome||''}">${p.nome_produto||p.nome||''}</h3>
-          <p class="meta">${metaLinha||'&nbsp;'}</p>
-          <p class="ml">${mlLinha}</p>
-          <div class="preco-area">
-            <span class="preco">R$ ${preco}</span>
+        <div class="produto-img">
+          <img src="/imagens-produtos/${id}.png" alt="${nome}" onerror="this.src='/imagens-produtos/default.png'">
+        </div>
+        <div class="produto-info">
+          <h3 class="produto-nome" title="${nome}">${nome}</h3>
+          <p class="produto-meta">${[marca, concentracao].filter(Boolean).join(' • ') || '&nbsp;'}</p>
+          <p class="produto-volume">${volume}</p>
+          <div class="produto-preco">R$ ${preco}</div>
+          <div class="produto-acoes">
+            <button class="btn btn-primary btn-sm" onclick="adicionarCarrinho(${id}, '${nome.replace(/'/g, "\\'")}', ${p.preco_produto || p.preco || 0})">
+              🛒 Carrinho
+            </button>
+            <button class="btn btn-success btn-sm" onclick="comprarDireto(${id}, '${nome.replace(/'/g, "\\'")}')">
+              Comprar
+            </button>
           </div>
         </div>
       `;
-      const el = div.querySelector('#'+holderId);
-      const img = document.createElement('img');
-      img.src = `/imagens-produtos/${id}.png`;
-      img.alt = p.nome_produto||p.nome||'Produto';
-      el.textContent=''; el.appendChild(img);
-
+      
       return div;
     }
 
-    // Fluxos de carrinho/checkout removidos no modelo B
-
-    // cache simplista de usuário (evita múltiplos fetch status)
-    let _usuarioCache = null;
-    async function obterUsuarioCache(){
-      if(_usuarioCache) return _usuarioCache;
-      try{
-        const res = await fetch(API_BASE_URL + '/login/status', { credentials:'include'});
-        const data = await res.json();
-        if(data.status==='ok'){ _usuarioCache = data.usuario; return _usuarioCache; }
-      }catch(e){ console.error(e); }
-      return null;
+    // ==================== CARRINHO (sessionStorage) ====================
+    
+    function getCarrinho() {
+      try {
+        return JSON.parse(sessionStorage.getItem('carrinho')) || [];
+      } catch {
+        return [];
+      }
     }
 
-    function feedback(msg){
+    function setCarrinho(items) {
+      sessionStorage.setItem('carrinho', JSON.stringify(items));
+    }
+
+    function adicionarCarrinho(id, nome, preco) {
+      const items = getCarrinho();
+      // Estrutura padronizada: {id, nome, preco, quantidade}
+      const idx = items.findIndex(i => i.id === id);
+      
+      if (idx >= 0) {
+        items[idx].quantidade += 1;
+      } else {
+        items.push({
+          id: id,
+          nome: nome,
+          preco: Number(preco),
+          quantidade: 1
+        });
+      }
+      
+      setCarrinho(items);
+      toast('✓ Adicionado ao carrinho!');
+      atualizarContadorCarrinho();
+    }
+
+    function atualizarContadorCarrinho() {
+      const items = getCarrinho();
+      const total = items.reduce((sum, item) => sum + item.quantidade, 0);
+      // Atualizar badge se existir
+      const badge = document.querySelector('.carrinho-badge');
+      if (badge) badge.textContent = total;
+    }
+
+    async function comprarDireto(id, nome) {
+      if (!_usuarioCache) {
+        toast('Faça login para comprar', 'warning');
+        setTimeout(() => window.location.href = '/login/login.html', 1500);
+        return;
+      }
+
+      if (_usuarioCache.tipo === 'funcionario') {
+        toast('Funcionários devem usar o sistema de pedidos', 'warning');
+        return;
+      }
+
+      if (!confirm(`Confirma a compra de "${nome}"?`)) return;
+
+      try {
+        const res = await fetch(API_BASE_URL + '/pedido/comprar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ id_produto: id, quantidade: 1 })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          toast(data.error || 'Erro ao comprar', 'danger');
+          return;
+        }
+
+        toast(`✓ Compra realizada! Pedido #${data.id_pedido}`, 'success');
+      } catch (e) {
+        toast('Erro de conexão', 'danger');
+        console.error(e);
+      }
+    }
+
+    // ==================== TOAST ====================
+    
+    function toast(msg, type = 'success') {
       let box = document.getElementById('toast-box');
-      if(!box){
+      if (!box) {
         box = document.createElement('div');
-        box.id='toast-box';
+        box.id = 'toast-box';
         document.body.appendChild(box);
       }
+      
       const el = document.createElement('div');
-      el.className='toast';
+      el.className = `toast toast-${type}`;
       el.textContent = msg;
       box.appendChild(el);
-      setTimeout(()=>{ el.classList.add('show'); },10);
-      setTimeout(()=>{
+      
+      setTimeout(() => el.classList.add('show'), 10);
+      setTimeout(() => {
         el.classList.remove('show');
-        setTimeout(()=> el.remove(),300);
-      },2500);
+        setTimeout(() => el.remove(), 300);
+      }, 3000);
     }
+
+    // ==================== INIT ====================
+    carregarUsuario();
   </script>
-  <style>
-    /* Layout geral com colunas em branco nas laterais */
-    body{background:#fcfcfc;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
-    .page-container{max-width:1320px;margin:0 auto;padding:0 60px;}
-    @media (max-width:1400px){ .page-container{max-width:1180px;} }
-    @media (max-width:1200px){ .page-container{padding:0 40px;} }
-    @media (max-width:900px){ .page-container{padding:0 24px;} }
-    @media (max-width:600px){ .page-container{padding:0 14px;} }
-    .sec-title{text-align:center;font-size:1.4rem;letter-spacing:.5px;margin:28px 0 10px;font-weight:650;color:#222;}
-    .catalogo{padding-bottom:50px;}
-    /* Layout inspirado no referencial: imagem alta, info empilhada, 4 colunas fixas */
-    .perfumes-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;margin:28px 0 10px;}
-    @media (max-width:1100px){ .perfumes-grid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));} }
-    .perfume-card{background:#fff;border-radius:12px;box-shadow:0 3px 10px rgba(0,0,0,.10);display:flex;flex-direction:column;position:relative;overflow:hidden;transition:box-shadow .18s,transform .18s;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
-    .perfume-card:hover{box-shadow:0 8px 22px rgba(0,0,0,.18);transform:translateY(-4px);} 
-    .perfume-card .img-wrap{padding:14px 14px 0;}
-    .perfume-card .img-holder{width:100%;aspect-ratio:3/4;background:linear-gradient(135deg,#f2f2f2,#dadada);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;overflow:hidden;position:relative;}
-    @supports not (aspect-ratio: 3 / 4){ .perfume-card .img-holder{height:260px;} }
-    .perfume-card .img-holder img{width:100%;height:100%;object-fit:cover;display:block;}
-    .perfume-card .info{display:flex;flex-direction:column;padding:10px 14px 14px;gap:4px;min-height:150px;}
-    .perfume-card h3.nome{margin:0;font-size:.85rem;line-height:1.15;font-weight:600;max-height:2.3em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-    .perfume-card .meta{margin:0;font-size:.65rem;color:#666;line-height:1.1;height:1.1em;overflow:hidden;}
-    .perfume-card .ml{margin:0;font-size:.6rem;color:#888;}
-    .perfume-card .preco-area{margin-top:auto;display:flex;align-items:flex-end;gap:6px;}
-    .perfume-card .preco{font-weight:700;color:#1a6b2d;font-size:.9rem;letter-spacing:.3px;}
-    .perfume-card .acoes-card{display:flex;gap:6px;margin-top:8px;}
-    .perfume-card .acoes-card button{flex:1;cursor:pointer;border:none;padding:8px 8px;font-size:.7rem;border-radius:6px;background:#1e7a34;color:#fff;font-weight:600;letter-spacing:.5px;display:flex;align-items:center;justify-content:center;gap:4px;transition:background .18s,transform .18s;}
-    .perfume-card .acoes-card button.btn-buy{background:#23518a;}
-    .perfume-card .acoes-card button:hover{background:#145424;}
-    .perfume-card .acoes-card button.btn-buy:hover{background:#193d66;}
-    .perfume-card .acoes-card button.loading{opacity:.55;pointer-events:none;}
-    #toast-box{position:fixed;bottom:18px;right:18px;display:flex;flex-direction:column;gap:10px;z-index:9999;}
-    #toast-box .toast{background:#222;color:#fff;padding:10px 16px;border-radius:8px;font-size:.72rem;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .25s;box-shadow:0 4px 16px rgba(0,0,0,.25);}
-    #toast-box .toast.show{opacity:1;transform:translateY(0);}
-  </style>
-
-  <script src="/common/simpleHeader.js"></script>
-
 </body>
-
 </html>

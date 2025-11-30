@@ -1,0 +1,307 @@
+/**
+ * ============================================
+ * LOGIN.CSS - Estilos da Página de Login
+ * Sistema de Design Padronizado HabibPerfumeShop
+ * ============================================
+ * Complementa o global.css
+ */
+
+/* ============================================
+   PÁGINA DE LOGIN
+   ============================================ */
+
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 50%, #4A2B4A 100%);
+    background-attachment: fixed;
+}
+
+.login-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* ============================================
+   CONTAINER DO LOGIN
+   ============================================ */
+
+.login-container {
+    background-color: #FFFFFF;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 420px;
+    animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================
+   CABEÇALHO DO LOGIN
+   ============================================ */
+
+.login-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.login-header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 0 0 8px;
+}
+
+.login-header p {
+    color: #6B7280;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* ============================================
+   BOTÕES DE TAB (Login/Cadastro)
+   ============================================ */
+
+.tab-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    background-color: #F8F9FA;
+    padding: 6px;
+    border-radius: 10px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: transparent;
+    color: #6B7280;
+}
+
+.tab-btn:hover {
+    color: #3A6EA5;
+}
+
+.tab-btn.active {
+    background-color: var(--color-primary);
+    color: var(--text-white);
+    box-shadow: 0 4px 12px rgba(139, 75, 139, 0.3);
+}
+
+/* ============================================
+   ÁREAS DE FORMULÁRIO
+   ============================================ */
+
+.form-area {
+    display: none;
+}
+
+.form-area.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.form-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #222222;
+    margin: 0 0 20px;
+    text-align: center;
+}
+
+/* ============================================
+   GRUPOS DE FORMULÁRIO
+   ============================================ */
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 1rem;
+    font-family: inherit;
+    border: 2px solid #E2E8F0;
+    border-radius: 10px;
+    background-color: #FFFFFF;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px var(--color-primary-light);
+}
+
+.form-group input::placeholder {
+    color: #9CA3AF;
+}
+
+/* ============================================
+   BOTÕES
+   ============================================ */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: inherit;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    color: var(--text-white);
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 75, 139, 0.35);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-block {
+    width: 100%;
+    margin-top: 8px;
+}
+
+/* ============================================
+   DICA DO FORMULÁRIO
+   ============================================ */
+
+.form-hint {
+    display: block;
+    margin-top: 12px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #6B7280;
+}
+
+/* ============================================
+   MENSAGENS DE FEEDBACK
+   ============================================ */
+
+.message {
+    margin-top: 20px;
+    padding: 0;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    min-height: 0;
+}
+
+.message:empty {
+    display: none;
+}
+
+.message-success {
+    display: block;
+    padding: 14px 16px;
+    background-color: #D4EDDA;
+    color: #155724;
+    border: 1px solid #C3E6CB;
+}
+
+.message-error {
+    display: block;
+    padding: 14px 16px;
+    background-color: #F8D7DA;
+    color: #721C24;
+    border: 1px solid #F5C6CB;
+}
+
+/* ============================================
+   RESPONSIVIDADE
+   ============================================ */
+
+@media (max-width: 480px) {
+    .login-container {
+        padding: 28px 24px;
+        border-radius: 12px;
+    }
+    
+    .login-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .form-group input {
+        padding: 12px 14px;
+    }
+    
+    .btn {
+        padding: 12px 20px;
+    }
+}
+
+/* ============================================
+   EFEITOS DECORATIVOS
+   ============================================ */
+
+.login-page::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.login-container {
+    position: relative;
+    z-index: 1;
+}

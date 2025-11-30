@@ -112,6 +112,10 @@ app.use('/pedido_has_produto', pedido_has_produtoRoutes);
 const forma_pagamentoRoutes = require('./routes/forma_pagamentoRoutes');
 app.use('/forma_pagamento', forma_pagamentoRoutes);
 
+// Rotas de pagamento (modelo professor)
+const pagamentoRoutes = require('./routes/pagamentoRoutes');
+app.use('/pagamento', pagamentoRoutes);
+
 const clienteRoutes = require('./routes/clienteRoutes');
 app.use('/cliente', clienteRoutes);
 
@@ -131,6 +135,10 @@ app.use('/', imageRoutes);
 // Rotas de cargo (modelo B)
 const cargoRoutes = require('./routes/cargoRoutes');
 app.use('/cargo', cargoRoutes);
+
+// Rotas de relatórios do gerente (requisito obrigatório 4º bim)
+const relatorioRoutes = require('./routes/relatorioRoutes');
+app.use('/relatorio', relatorioRoutes);
 
 // const avaliadorRoutes = require('./routes/avaliadorRoutes');
 // app.use('/avaliador', avaliadorRoutes);
@@ -244,7 +252,8 @@ app.use((req, res) => {
   const url = req.originalUrl || '';
   const apiPrefixes = [
     '/login','/menu','/funcionario','/cliente','/produto','/pedido',
-    '/forma_pagamento','/pessoa','/imagens-produtos',
+    '/forma_pagamento','/pessoa','/imagens-produtos','/relatorio',
+    '/pagamento','/cargo','/pedido_has_produto',
     '/health','/_routes'
   ];
 

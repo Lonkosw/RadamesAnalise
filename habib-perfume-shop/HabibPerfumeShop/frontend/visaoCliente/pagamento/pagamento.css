@@ -1,0 +1,144 @@
+/* ============================================================================
+   pagamento.css - Estilos da Tela de Pagamento - Habib Perfume Shop
+   Complementa o global.css
+   ============================================================================ */
+
+/* Resumo do Pedido */
+.resumo-pedido .card-body {
+    text-align: center;
+}
+
+.info-pedido {
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+}
+
+.valor-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--bg-light);
+    border-radius: var(--radius-md);
+    margin-bottom: 8px;
+}
+
+.valor-row .valor {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--color-primary);
+}
+
+.valor-row.valor-restante .valor {
+    color: var(--color-danger);
+}
+
+.valor-row.valor-restante .valor.pago {
+    color: var(--color-success);
+}
+
+/* Seleção de pagamento */
+.selecao-pagamento {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+.selecao-pagamento label {
+    font-weight: 500;
+}
+
+.selecao-pagamento .form-control {
+    flex: 1;
+    min-width: 200px;
+}
+
+/* Formas adicionadas */
+.formas-adicionadas {
+    margin-bottom: 24px;
+}
+
+.forma-pagamento-item {
+    background: var(--bg-light);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin-bottom: 12px;
+    border-left: 4px solid var(--color-primary);
+}
+
+.cabecalho-forma {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.tipo-pagamento {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--color-primary);
+}
+
+.campo-valor {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.campo-valor label {
+    font-weight: 500;
+}
+
+.campo-valor input {
+    padding: 10px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    width: 150px;
+}
+
+.campo-valor input:focus {
+    border-color: var(--color-primary);
+    outline: none;
+}
+
+.erro {
+    color: var(--color-danger);
+    font-size: 0.9rem;
+    display: none;
+}
+
+/* Botão de finalizar grande */
+.btn-lg {
+    padding: 16px 24px;
+    font-size: 1.2rem;
+}
+
+.btn-block {
+    width: 100%;
+    display: block;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .selecao-pagamento {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .selecao-pagamento .form-control {
+        width: 100%;
+    }
+    
+    .campo-valor {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .campo-valor input {
+        width: 100%;
+    }
+}

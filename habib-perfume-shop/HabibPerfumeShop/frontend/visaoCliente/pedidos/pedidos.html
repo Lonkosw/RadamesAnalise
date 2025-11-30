@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus Pedidos - Habib Perfume Shop</title>
+    <link rel="stylesheet" href="../../styles/global.css">
+    <link rel="stylesheet" href="pedidos.css">
+</head>
+<body>
+    <!-- Header Padrão -->
+    <header class="header-padrao">
+        <div class="header-content">
+            <a href="../index.html" class="logo">🌸 Habib Perfume Shop</a>
+            <nav class="nav-menu">
+                <a href="../index.html">Início</a>
+                <a href="../carrinho/carrinho.html">Carrinho</a>
+                <a href="./pedidos.html" class="active">Meus Pedidos</a>
+            </nav>
+            <div class="usuario-info">
+                <span id="nomeUsuario">Cliente</span>
+                <a href="#" onclick="logout()" class="btn btn-sm btn-outline">Sair</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="container">
+        <div class="page-header">
+            <h1>📦 Meus Pedidos</h1>
+        </div>
+        
+        <div id="lista-pedidos" class="lista-pedidos">
+            <p class="carregando">Carregando pedidos...</p>
+        </div>
+    </main>
+
+    <!-- Footer Padrão -->
+    <footer class="footer-padrao">
+        <p>&copy; 2024 Habib Perfume Shop - Todos os direitos reservados</p>
+    </footer>
+
+    <script src="pedidos.js"></script>
+    <script>
+        function logout() {
+            localStorage.removeItem('usuario');
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        }
+        
+        // Carregar nome do usuário
+        document.addEventListener('DOMContentLoaded', () => {
+            const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+            const nomeEl = document.getElementById('nomeUsuario');
+            if (nomeEl && usuario.nome) {
+                nomeEl.textContent = usuario.nome;
+            }
+        });
+    </script>
+</body>
+</html>

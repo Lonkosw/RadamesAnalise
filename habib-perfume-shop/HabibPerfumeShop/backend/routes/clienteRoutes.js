@@ -1,10 +1,21 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
 const clienteController = require('../controllers/clienteController');
 const { ensureFuncionario } = require('../middleware/auth');
 
 // Aliases para abrir CRUD (compatibilidade com produto pattern)
 router.get(['/crud','/abrirCrudCliente'], clienteController.abrirCrudCliente);
+
+// IMPORTANTE: Servir arquivos estáticos do CRUD ANTES da rota :cpf para evitar conflito
+// Quando o HTML carrega "./cliente.js", ele vira "/cliente/cliente.js"
+// Sem essa rota específica, o Express interpreta "cliente.js" como :cpf e retorna 400
+router.get('/cliente.js', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../frontend/cliente/cliente.js'));
+});
+router.get('/cliente.css', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../frontend/cliente/cliente.css'));
+});
 
 // Diagnóstico rápido
 router.head('/', (req,res)=> res.status(200).end());

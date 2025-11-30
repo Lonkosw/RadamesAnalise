@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finalizar Compra - Habib Perfume Shop</title>
+    <link rel="stylesheet" href="../../styles/global.css">
+    <link rel="stylesheet" href="finalizar.css">
+</head>
+<body>
+    <!-- Header Padrão -->
+    <header class="header-padrao">
+        <div class="header-content">
+            <a href="../index.html" class="logo">🌸 Habib Perfume Shop</a>
+            <nav class="nav-menu">
+                <a href="../index.html">Início</a>
+                <a href="../carrinho/carrinho.html">Carrinho</a>
+                <a href="../pedidos/pedidos.html">Meus Pedidos</a>
+            </nav>
+            <div class="usuario-info">
+                <span id="nomeUsuario">Cliente</span>
+                <a href="#" onclick="logout()" class="btn btn-sm btn-outline">Sair</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="container">
+        <div class="page-header">
+            <h1>📋 Confira seu Pedido</h1>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table" id="lista-finalizar">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Produto</th>
+                                <th>Preço Unit.</th>
+                                <th>Quantidade</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaFinalizar"></tbody>
+                    </table>
+                </div>
+
+                <div class="total-box" id="total-final">Total Final: R$ 0,00</div>
+                
+                <div class="container-botoes">
+                    <button onclick="window.location.href='../carrinho/carrinho.html'" class="btn btn-secondary">← Voltar ao Carrinho</button>
+                    <button id="btn-finalizar" class="btn btn-primary">Ir para Pagamento →</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer Padrão -->
+    <footer class="footer-padrao">
+        <p>&copy; 2024 Habib Perfume Shop - Todos os direitos reservados</p>
+    </footer>
+
+    <script src="finalizar.js"></script>
+    <script>
+        function logout() {
+            localStorage.removeItem('usuario');
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        }
+        
+        // Carregar nome do usuário
+        document.addEventListener('DOMContentLoaded', () => {
+            const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+            const nomeEl = document.getElementById('nomeUsuario');
+            if (nomeEl && usuario.nome) {
+                nomeEl.textContent = usuario.nome;
+            }
+        });
+    </script>
+</body>
+</html>

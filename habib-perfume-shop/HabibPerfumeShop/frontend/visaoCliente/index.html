@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habib Perfume Shop - Área do Cliente</title>
+    <link rel="stylesheet" href="../styles/global.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <!-- Header Padrão -->
+    <header class="header-padrao">
+        <div class="header-content">
+            <a href="/menu" class="logo">🌸 Habib Perfume Shop</a>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="/menu">🏠 Início</a></li>
+                    <li><a href="/visaoCliente/carrinho/carrinho.html">🛒 Carrinho</a></li>
+                    <li><a href="/visaoCliente/pedidos/pedidos.html">📦 Meus Pedidos</a></li>
+                </ul>
+            </nav>
+            <div class="usuario-info">
+                <span id="usuario-logado">Cliente</span>
+                <a href="#" onclick="logout()" class="btn btn-sm btn-outline">Sair</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="padding-top: 32px; padding-bottom: 32px;">
+        <section class="boas-vindas">
+            <h2>Bem-vindo(a)!</h2>
+            <p id="mensagem-boas-vindas">Você está na área do cliente.</p>
+        </section>
+
+        <section class="acoes-rapidas">
+            <h3>O que deseja fazer?</h3>
+            <div class="cards-grid">
+                <div class="card action-card" onclick="window.location.href='/menu'">
+                    <span class="icon">🛍️</span>
+                    <h4>Ver Produtos</h4>
+                    <p>Navegue pelo nosso catálogo de perfumes</p>
+                </div>
+                <div class="card action-card" onclick="window.location.href='/visaoCliente/carrinho/carrinho.html'">
+                    <span class="icon">🛒</span>
+                    <h4>Meu Carrinho</h4>
+                    <p>Veja os itens no seu carrinho</p>
+                </div>
+                <div class="card action-card" onclick="window.location.href='/visaoCliente/pedidos/pedidos.html'">
+                    <span class="icon">📦</span>
+                    <h4>Meus Pedidos</h4>
+                    <p>Acompanhe seus pedidos anteriores</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer Padrão -->
+    <footer class="footer-padrao">
+        <p>&copy; 2025 Habib Perfume Shop - Todos os direitos reservados</p>
+    </footer>
+
+    <script src="index.js"></script>
+    <script>
+        function logout() {
+            document.cookie = 'usuarioLogado=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+            window.location.href = '/login/login.html';
+        }
+    </script>
+</body>
+</html>
