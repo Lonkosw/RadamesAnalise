@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Marcas - Habib Perfume Shop</title>
+    <link rel="stylesheet" href="/styles/global.css">
+    <link rel="stylesheet" href="/marca/marca.css">
+</head>
+<body>
+    <!-- Header simples -->
+    <header class="simple-header">
+        <div class="header-content">
+            <a href="/menu" class="back-link">← Voltar ao Menu</a>
+            <h1>🏷️ Gerenciamento de Marcas</h1>
+        </div>
+    </header>
+
+    <main class="crud-container">
+        <!-- Seção de Formulário -->
+        <section class="form-section">
+            <div class="form-card">
+                <h2 class="form-title" id="formTitle">➕ Nova Marca</h2>
+                
+                <form id="formMarca" class="crud-form">
+                    <input type="hidden" id="idMarca">
+                    
+                    <div class="form-group">
+                        <label for="nomeMarca">Nome da Marca *</label>
+                        <input type="text" id="nomeMarca" class="form-control" 
+                               placeholder="Ex: Chanel, Dior, Calvin Klein..." 
+                               required maxlength="100">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="btnSalvar">
+                            💾 Salvar
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="btnLimpar" onclick="limparFormulario()">
+                            🔄 Limpar
+                        </button>
+                    </div>
+                </form>
+                
+                <div id="mensagem" class="message"></div>
+            </div>
+        </section>
+
+        <!-- Seção de Busca e Listagem -->
+        <section class="list-section">
+            <div class="list-card">
+                <div class="list-header">
+                    <h2>📋 Marcas Cadastradas</h2>
+                    <div class="search-box">
+                        <input type="text" id="buscaMarca" class="form-control" 
+                               placeholder="🔍 Buscar marca...">
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="data-table" id="tabelaMarcas">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome da Marca</th>
+                                <th>Produtos</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabela">
+                            <!-- Preenchido via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="semResultados" class="no-results" style="display: none;">
+                    <p>🔍 Nenhuma marca encontrada</p>
+                </div>
+                
+                <div class="stats-bar">
+                    <span id="totalMarcas">Total: 0 marcas</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal de Confirmação -->
+    <div id="modalConfirmacao" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>⚠️ Confirmar Exclusão</h3>
+            <p id="mensagemModal">Deseja realmente excluir esta marca?</p>
+            <div class="modal-actions">
+                <button class="btn btn-danger" id="btnConfirmarExclusao">Excluir</button>
+                <button class="btn btn-secondary" onclick="fecharModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/marca/marca.js"></script>
+</body>
+</html>

@@ -1,564 +1,464 @@
+/**
+ * pessoa.js - CRUD UNIFICADO DE PESSOAS
+ * Gerencia Cliente e Funcionário em um único formulário
+ */
 
-// Configuração da API, IP e porta.
 const API_BASE_URL = 'http://localhost:3001';
-let currentPersonId = null;
-let operacao = null;
 
-// Elementos do DOM
+// Estado
+let operacao = null; // 'incluir' | 'alterar'
+let cpfAtual = null;
+let cargosCache = [];
+
+// Elementos DOM
 const form = document.getElementById('pessoaForm');
-const searchId = document.getElementById('searchId');
+const formFields = document.getElementById('formFields');
+const searchCpf = document.getElementById('searchCpf');
+
+// Botões
 const btnBuscar = document.getElementById('btnBuscar');
-const btnIncluir = document.getElementById('btnIncluir');
+const btnNovo = document.getElementById('btnNovo');
+const btnSalvar = document.getElementById('btnSalvar');
 const btnAlterar = document.getElementById('btnAlterar');
 const btnExcluir = document.getElementById('btnExcluir');
 const btnCancelar = document.getElementById('btnCancelar');
-const btnSalvar = document.getElementById('btnSalvar');
-const pessoasTableBody = document.getElementById('pessoasTableBody');
-const messageContainer = document.getElementById('messageContainer');
 
-// Carregar lista de pessoas ao inicializar
-document.addEventListener('DOMContentLoaded', () => {
-    carregarPessoas();
+// Campos condicionais
+const tipoSelect = document.getElementById('tipo');
+const camposCliente = document.getElementById('camposCliente');
+const camposFuncionario = document.getElementById('camposFuncionario');
+
+// Tabela
+const pessoasTableBody = document.getElementById('pessoasTableBody');
+
+// ============================================================================
+// INICIALIZAÇÃO
+// ============================================================================
+document.addEventListener('DOMContentLoaded', async () => {
+    await carregarCargos();
+    await carregarPessoas();
+    setupEventListeners();
+    resetarEstado();
 });
 
-// Event Listeners
-btnBuscar.addEventListener('click', buscarPessoa);
-btnIncluir.addEventListener('click', incluirPessoa);
-btnAlterar.addEventListener('click', alterarPessoa);
-btnExcluir.addEventListener('click', excluirPessoa);
-btnCancelar.addEventListener('click', cancelarOperacao);
-btnSalvar.addEventListener('click', salvarOperacao);
+function setupEventListeners() {
+    btnBuscar.addEventListener('click', buscarPessoa);
+    btnNovo.addEventListener('click', novaPessoa);
+    btnSalvar.addEventListener('click', salvarPessoa);
+    btnAlterar.addEventListener('click', habilitarAlteracao);
+    btnExcluir.addEventListener('click', excluirPessoa);
+    btnCancelar.addEventListener('click', cancelarOperacao);
 
-mostrarBotoes(true, false, false, false, false, false);// mostrarBotoes(btBuscar, btIncluir, btAlterar, btExcluir, btSalvar, btCancelar)
-bloquearCampos(false);//libera pk e bloqueia os demais campos
+    // Mudança de tipo
+    tipoSelect.addEventListener('change', atualizarCamposCondicionais);
 
-// Função para mostrar mensagens
-function mostrarMensagem(texto, tipo = 'info') {
-    messageContainer.innerHTML = `<div class="message ${tipo}">${texto}</div>`;
-    setTimeout(() => {
-        messageContainer.innerHTML = '';
-    }, 3000);
-}
+    // Máscara de CPF
+    searchCpf.addEventListener('input', aplicarMascaraCpf);
+    document.getElementById('cpf_pessoa').addEventListener('input', aplicarMascaraCpf);
 
-function bloquearCampos(bloquearPrimeiro) {
-    const inputs = document.querySelectorAll('input, select,checkbox'); // Seleciona todos os inputs e selects do DOCUMENTO
-    inputs.forEach((input, index) => {
-        // console.log(`Input ${index}: ${input.name}, disabled: ${input.disabled}`);
-        if (index === 0) {
-            // Primeiro elemento - bloqueia se bloquearPrimeiro for true, libera se for false
-            input.disabled = bloquearPrimeiro;
-        } else {
-            // Demais elementos - faz o oposto do primeiro
-            input.disabled = !bloquearPrimeiro;
+    // Enter para buscar
+    searchCpf.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            buscarPessoa();
         }
     });
 }
 
-// Função para limpar formulário
-function limparFormulario() {
-    form.reset();
-    document.getElementById('mnemonicoProfessor').value = '';
-    document.getElementById('departamentoProfessor').value = '';
-    document.getElementById('checkboxAvaliador').checked = false;    
-    document.getElementById('checkboxAvaliado').checked = false;
+// ============================================================================
+// MÁSCARAS E FORMATAÇÃO
+// ============================================================================
+function aplicarMascaraCpf(e) {
+    let valor = e.target.value.replace(/\D/g, '');
+    if (valor.length > 11) valor = valor.slice(0, 11);
+    
+    if (valor.length > 9) {
+        valor = valor.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+    } else if (valor.length > 6) {
+        valor = valor.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+    } else if (valor.length > 3) {
+        valor = valor.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+    }
+    e.target.value = valor;
 }
 
-
-function mostrarBotoes(btBuscar, btIncluir, btAlterar, btExcluir, btSalvar, btCancelar) {
-    btnBuscar.style.display = btBuscar ? 'inline-block' : 'none';
-    btnIncluir.style.display = btIncluir ? 'inline-block' : 'none';
-    btnAlterar.style.display = btAlterar ? 'inline-block' : 'none';
-    btnExcluir.style.display = btExcluir ? 'inline-block' : 'none';
-    btnSalvar.style.display = btSalvar ? 'inline-block' : 'none';
-    btnCancelar.style.display = btCancelar ? 'inline-block' : 'none';
+function limparCpf(cpf) {
+    return (cpf || '').replace(/\D/g, '');
 }
 
-// Função para formatar data para exibição
+function formatarCpf(cpf) {
+    const limpo = limparCpf(cpf);
+    if (limpo.length !== 11) return limpo;
+    return limpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+}
+
 function formatarData(dataString) {
-    if (!dataString) return '';
+    if (!dataString) return '-';
     const data = new Date(dataString);
     return data.toLocaleDateString('pt-BR');
 }
 
-// Função para converter data para formato ISO
-function converterDataParaISO(dataString) {
-    if (!dataString) return null;
-    return new Date(dataString).toISOString();
+function formatarMoeda(valor) {
+    return Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-async function funcaoEhProfessor(pessoaId) {
+// ============================================================================
+// CARREGAR DADOS
+// ============================================================================
+async function carregarCargos() {
     try {
-        const response = await fetch(`${API_BASE_URL}/professor/${pessoaId}`);
-
-        if (response.status === 404) {
-            return { ehProfessor: false };
-        }
-
-        if (response.status === 200) {
-            const professorData = await response.json();
-            return {
-                ehProfessor: true, // CORREÇÃO: era "pessoa_id_pessoa: true"
-                mnemonico: professorData.mnemonico_professor, // CORREÇÃO: usar o nome correto do campo
-                departamento: professorData.departamento_professor // CORREÇÃO: usar o nome correto do campo
-            };
-        }
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Erro na requisição:', errorData.error);
-            return { ehProfessor: false };
-        }
-
-    } catch (error) {
-        console.error('Erro ao verificar se é professor:', error);
-        return { ehProfessor: false };
-    }
-}
-
-
-
-// Função para buscar pessoa por ID
-async function buscarPessoa() {
-    const id = searchId.value.trim();
-    if (!id) {
-        mostrarMensagem('Digite um ID para buscar', 'warning');
-        return;
-    }
-
-    bloquearCampos(false);
-    searchId.focus();
-    try {
-        const response = await fetch(`${API_BASE_URL}/pessoa/${id}`);
-
+        const response = await fetch(`${API_BASE_URL}/cargo`);
         if (response.ok) {
-            const pessoa = await response.json();
-            preencherFormulario(pessoa);
-
-            mostrarBotoes(true, false, true, true, false, false);// mostrarBotoes(btBuscar, btIncluir, btAlterar, btExcluir, btSalvar, btCancelar)
-            mostrarMensagem('Pessoa encontrada!', 'success');
-
-        } else if (response.status === 404) {
-            limparFormulario();
-            searchId.value = id;
-            mostrarBotoes(true, true, false, false, false, false); //mostrarBotoes(btBuscar, btIncluir, btAlterar, btExcluir, btSalvar, btCancelar)
-            mostrarMensagem('Pessoa não encontrada. Você pode incluir uma nova pessoa.', 'info');
-            bloquearCampos(false);//bloqueia a pk e libera os demais campos
-            //enviar o foco para o campo de nome
-        } else {
-            throw new Error('Erro ao buscar pessoa');
+            cargosCache = await response.json();
+            popularSelectCargos();
         }
     } catch (error) {
-        console.error('Erro:', error);
-        mostrarMensagem('Erro ao buscar pessoa', 'error');
-    }
-
-    // Verifica se a pessoa é professor
-    const oProfessor = await funcaoEhProfessor(id);
-
-    if (oProfessor.ehProfessor) {
-        // alert('É professor: ' + oProfessor.ehProfessor + ' - ' + oProfessor.mnemonico + ' - ' + oProfessor.departamento);
-        document.getElementById('checkboxProfessor').checked = true;
-        document.getElementById('mnemonicoProfessor').value = oProfessor.mnemonico;
-        document.getElementById('departamentoProfessor').value = oProfessor.departamento;
-    } else {
-        // Não é professor
-        document.getElementById('checkboxProfessor').checked = false;
-        document.getElementById('mnemonicoProfessor').value = '';
-        document.getElementById('departamentoProfessor').value = '';
-    }
-
-    //Verifica se a pessoa é avaliador
-    try {
-        const responseAvaliador = await fetch(`${API_BASE_URL}/avaliador/${id}`);
-        if (responseAvaliador.status === 200) {
-            document.getElementById('checkboxAvaliador').checked = true;
-        } else {
-            document.getElementById('checkboxAvaliador').checked = false;
-        }
-    } catch (error) {
-        console.error('Erro ao verificar se é avaliador:', error);
-        document.getElementById('checkboxAvaliador').checked = false;
-    }
-
-    //Verifica se a pessoa é avaliado
-    try {
-        const responseAvaliado = await fetch(`${API_BASE_URL}/avaliado/${id}`);
-        if (responseAvaliado.status === 200) {
-            document.getElementById('checkboxAvaliado').checked = true;
-        } else {
-            document.getElementById('checkboxAvaliado').checked = false;
-        }
-    } catch (error) {
-        console.error('Erro ao verificar se é avaliado:', error);
-        document.getElementById('checkboxAvaliado').checked = false;
+        console.error('Erro ao carregar cargos:', error);
     }
 }
 
-// Função para preencher formulário com dados da pessoa
-function preencherFormulario(pessoa) {
-    currentPersonId = pessoa.id_pessoa;
-    searchId.value = pessoa.id_pessoa;
-    document.getElementById('nome_pessoa').value = pessoa.nome_pessoa || '';
-    document.getElementById('email_pessoa').value = pessoa.email_pessoa || '';
-    document.getElementById('senha_pessoa').value = pessoa.senha_pessoa || '';
-    document.getElementById('primeiro_acesso_pessoa').value = pessoa.primeiro_acesso_pessoa ? 'true' : 'false';
-
-    // Formatação da data para input type="date"
-    if (pessoa.data_nascimento) {
-        const data = new Date(pessoa.data_nascimento);
-        const dataFormatada = data.toISOString().split('T')[0];
-        document.getElementById('data_nascimento').value = dataFormatada;
-    } else {
-        document.getElementById('data_nascimento').value = '';
-    }
-}
-
-
-// Função para incluir pessoa
-async function incluirPessoa() {
-
-    mostrarMensagem('Digite os dados!', 'success');
-    currentPersonId = searchId.value;
-    // console.log('Incluir nova pessoa - currentPersonId: ' + currentPersonId);
-    limparFormulario();
-    searchId.value = currentPersonId;
-    bloquearCampos(true);
-
-    mostrarBotoes(false, false, false, false, true, true); // mostrarBotoes(btBuscar, btIncluir, btAlterar, btExcluir, btSalvar, btCancelar)
-    document.getElementById('nome_pessoa').focus();
-    operacao = 'incluir';
-    // console.log('fim nova pessoa - currentPersonId: ' + currentPersonId);
-}
-
-// Função para alterar pessoa
-async function alterarPessoa() {
-    mostrarMensagem('Digite os dados!', 'success');
-    bloquearCampos(true);
-    mostrarBotoes(false, false, false, false, true, true);// mostrarBotoes(btBuscar, btIncluir, btAlterar, btExcluir, btSalvar, btCancelar)
-    document.getElementById('nome_pessoa').focus();
-    operacao = 'alterar';
-}
-
-// Função para excluir pessoa
-async function excluirPessoa() {
-    mostrarMensagem('Excluindo pessoa...', 'info');
-    currentPersonId = searchId.value;
-    //bloquear searchId
-    searchId.disabled = true;
-    bloquearCampos(false); // libera os demais campos
-    mostrarBotoes(false, false, false, false, true, true);// mostrarBotoes(btBuscar, btIncluir, btAlterar, btExcluir, btSalvar, btCancelar)           
-    operacao = 'excluir';
-}
-
-async function salvarOperacao() {
-    //console.log('Operação:', operacao + ' - currentPersonId: ' + currentPersonId + ' - searchId: ' + searchId.value);
-
-    const formData = new FormData(form);
-    const pessoa = {
-        id_pessoa: searchId.value,
-        nome_pessoa: formData.get('nome_pessoa'),
-        email_pessoa: formData.get('email_pessoa'),
-        senha_pessoa: formData.get('senha_pessoa'),
-        primeiro_acesso_pessoa: formData.get('primeiro_acesso_pessoa') === 'true',
-        data_nascimento: formData.get('data_nascimento') || null
-    };
-
-    let professor = null;
-    if (document.getElementById('checkboxProfessor').checked) {
-        professor = {
-            pessoa_id_pessoa: pessoa.id_pessoa,
-            mnemonico_professor: document.getElementById('mnemonicoProfessor').value,
-            departamento_professor: document.getElementById('departamentoProfessor').value
-        }
-    }
-
-    // é avaliador
-    let ehAvaliador = document.getElementById('checkboxAvaliador').checked; //true ou false
-
-    // é avaliado
-    let ehAvaliado = document.getElementById('checkboxAvaliado').checked; //true ou false
-
-    let responseProfessor = null;
-    let responsePessoa = null;
-    try {
-        if (operacao === 'incluir') {
-            responseProfessor = await fetch(`${API_BASE_URL}/pessoa`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(pessoa)
-            });
-            responsePessoa = responseProfessor;
-            if (document.getElementById('checkboxProfessor').checked) {
-                responseProfessor = await fetch(`${API_BASE_URL}/professor`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(professor)
-                });
-            }
-            let responseAvaliador = null;
-            if (ehAvaliador) {
-                const avaliador = {
-                    pessoa_id_pessoa: pessoa.id_pessoa
-                };
-                responseAvaliador = await fetch(`${API_BASE_URL}/avaliador`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(avaliador)
-                });
-            }
-
-            let responseAvaliado = null;
-            if (ehAvaliado) {
-                const avaliado = {
-                    pessoa_id_pessoa: pessoa.id_pessoa
-                };
-                responseAvaliado = await fetch(`${API_BASE_URL}/avaliado`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(avaliado)
-                });
-            }
-
-        } else if (operacao === 'alterar') {
-            responseProfessor = await fetch(`${API_BASE_URL}/pessoa/${currentPersonId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(pessoa)
-            });
-            responsePessoa = responseProfessor;
-
-            if (ehAvaliador) {
-                //se DEIXOU de ser avaliador, excluir da tabela avaliador
-                const caminhoRota = `${API_BASE_URL}/avaliador/${currentPersonId}`;
-
-                let respObterAvaliador = await fetch(caminhoRota);
-                //    console.log('Resposta ao obter avaliador ao alterar pessoa: ' + respObterAvaliador.status);
-                let avaliador = null;
-                if (respObterAvaliador.status === 404) {
-                    //incluir avaliador
-                    avaliador = {
-                        pessoa_id_pessoa: pessoa.id_pessoa
-                    }
-                };
-                
-                respObterAvaliador = await fetch(`${API_BASE_URL}/avaliador`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(avaliador)
-                });
-            } else {
-                //se DEIXOU de ser avaliador, excluir da tabela avaliador
-                const caminhoRota = `${API_BASE_URL}/avaliador/${currentPersonId}`;
-                let respObterAvaliador = await fetch(caminhoRota);
-                // console.log('Resposta ao obter avaliador para exclusão: ' + respObterAvaliador.status);
-                if (respObterAvaliador.status === 200) {
-                    //existe, pode excluir
-                    respObterAvaliador = await fetch(caminhoRota, {
-                        method: 'DELETE'
-                    });
-                }
-            }
-
-             if (ehAvaliado) {
-                //se DEIXOU de ser avaliado, excluir da tabela avaliado
-                const caminhoRota = `${API_BASE_URL}/avaliado/${currentPersonId}`;
-
-                let respObterAvaliado = await fetch(caminhoRota);
-                //    console.log('Resposta ao obter avaliado ao alterar pessoa: ' + respObterAvaliado.status);
-                let avaliado = null;
-                if (respObterAvaliado.status === 404) {
-                    //incluir avaliado
-                    avaliado = {
-                        pessoa_id_pessoa: pessoa.id_pessoa
-                    }
-                };
-                respObterAvaliado = await fetch(`${API_BASE_URL}/avaliado`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(avaliado)
-                });
-            } else {
-                //se DEIXOU de ser avaliado, excluir da tabela avaliado
-                const caminhoRota = `${API_BASE_URL}/avaliado/${currentPersonId}`;
-                let respObterAvaliado = await fetch(caminhoRota);
-                // console.log('Resposta ao obter avaliado para exclusão: ' + respObterAvaliado.status);
-                if (respObterAvaliado.status === 200) {
-                    //existe, pode excluir
-                    respObterAvaliado = await fetch(caminhoRota, {
-                        method: 'DELETE'
-                    });
-                }
-            }
-
-
-            if (document.getElementById('checkboxProfessor').checked) {
-                //   console.log('Vai alterar professor: ' + JSON.stringify(professor));
-                const caminhoRota = `${API_BASE_URL}/professor/${currentPersonId}`;
-                //console.log('Caminho da rota para professor: ' + caminhoRota);
-                //obter o professor para ver se existe
-                const respObterProfessor = await fetch(caminhoRota);
-                if (respObterProfessor.status === 404) {
-                    //não existe, incluir       
-                    responseProfessor = await fetch(`${API_BASE_URL}/professor`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(professor)
-                    });
-                } else {
-                    //já existe, alterar
-                    responseProfessor = await fetch(caminhoRota, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(professor)
-                    });
-                }
-            } else {
-                //se DEIXOU de ser professor, excluir da tabela professor
-                const caminhoRota = `${API_BASE_URL}/professor/${currentPersonId}`;
-                const respObterProfessor = await fetch(caminhoRota);
-                //    console.log('Resposta ao obter professor para exclusão: ' + respObterProfessor.status);
-                if (respObterProfessor.status === 200) {
-                    //existe, pode excluir
-                    responseProfessor = await fetch(caminhoRota, {
-                        method: 'DELETE'
-                    });
-                }
-            }
-        } else if (operacao === 'excluir') {
-            //se é avaliador, excluir da tabela avaliador primeiro
-            let responseAvaliador = null;
-            const caminhoRotaAvaliador = `${API_BASE_URL}/avaliador/${currentPersonId}`;
-            const respObterAvaliador = await fetch(caminhoRotaAvaliador);
-            //console.log('Resposta ao obter avaliador para exclusão: ' + respObterAvaliador.status);
-            if (respObterAvaliador.status === 200) {
-                //existe, pode excluir
-                responseAvaliador = await fetch(caminhoRotaAvaliador, {
-                    method: 'DELETE'
-                });
-            }
-
-             //se é avaliado, excluir da tabela avaliado primeiro
-            let responseAvaliado = null;
-            const caminhoRotaAvaliado = `${API_BASE_URL}/avaliado/${currentPersonId}`;
-            const respObterAvaliado = await fetch(caminhoRotaAvaliado);
-            //console.log('Resposta ao obter avaliado para exclusão: ' + respObterAvaliado.status);
-            if (respObterAvaliado.status === 200) {
-                //existe, pode excluir
-                responseAvaliado = await fetch(caminhoRotaAvaliado, {
-                    method: 'DELETE'
-                });
-            }
-
-
-            //verificar se é professor, se for, excluir da tabela professor primeiro
-            const caminhoRota = `${API_BASE_URL}/professor/${currentPersonId}`;
-            const respObterProfessor = await fetch(caminhoRota);
-            //    console.log('Resposta ao obter professor para exclusão: ' + respObterProfessor.status);
-            if (respObterProfessor.status === 200) {
-                //existe, pode excluir
-                responseProfessor = await fetch(caminhoRota, {
-                    method: 'DELETE'
-                });
-            }
-            //agora exclui da tabela pessoa
-            // console.log('Excluindo pessoa com ID:', currentPersonId);
-            responseProfessor = await fetch(`${API_BASE_URL}/pessoa/${currentPersonId}`, {
-                method: 'DELETE'
-            });
-            responsePessoa = responseProfessor;
-            //  console.log('Pessoa excluída' + responseProfessor.status);
-        }
-
-        if (responsePessoa.ok && (operacao === 'incluir' || operacao === 'alterar')) {
-
-            mostrarMensagem('Operação ' + operacao + ' realizada com sucesso!', 'success');
-            limparFormulario();
-            carregarPessoas();
-
-        } else if (operacao !== 'excluir') {
-            const error = await responsePessoa.json();
-            mostrarMensagem(error.error || 'Erro ao incluir pessoa', 'error');
-        } else {
-            mostrarMensagem('Pessoa excluída com sucesso!', 'success');
-            limparFormulario();
-            carregarPessoas();
-        }
-    } catch (error) {
-        console.error('Erro:', error);
-        mostrarMensagem('Erro ao incluir ou alterar a pessoa', 'error');
-    }
-
-    mostrarBotoes(true, false, false, false, false, false);// mostrarBotoes(btBuscar, btIncluir, btAlterar, btExcluir, btSalvar, btCancelar)
-    bloquearCampos(false);//libera pk e bloqueia os demais campos
-    document.getElementById('searchId').focus();
-}
-// Função para cancelar operação
-function cancelarOperacao() {
-    limparFormulario();
-    mostrarBotoes(true, false, false, false, false, false);// mostrarBotoes(btBuscar, btIncluir, btAlterar, btExcluir, btSalvar, btCancelar)
-    bloquearCampos(false);//libera pk e bloqueia os demais campos
-    document.getElementById('searchId').focus();
-    mostrarMensagem('Operação cancelada', 'info');
-}
-
-// Função para carregar lista de pessoas
-async function carregarPessoas() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/pessoa`);
-
-        if (response.ok) {
-            const pessoas = await response.json();
-            renderizarTabelaPessoas(pessoas);
-        } else {
-            throw new Error('Erro ao carregar pessoas');
-        }
-    } catch (error) {
-        console.error('Erro:', error);
-        mostrarMensagem('Erro ao carregar lista de pessoas', 'error');
-    }
-}
-
-// Função para renderizar tabela de pessoas
-function renderizarTabelaPessoas(pessoas) {
-    pessoasTableBody.innerHTML = '';
-
-    pessoas.forEach(pessoa => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-                    <td>
-                        <button class="btn-id" onclick="selecionarPessoa(${pessoa.id_pessoa})">
-                            ${pessoa.id_pessoa}
-                        </button>
-                    </td>
-                    <td>${pessoa.nome_pessoa}</td>
-                    <td>${pessoa.email_pessoa}</td>
-                    <td>${pessoa.primeiro_acesso_pessoa ? 'Sim' : 'Não'}</td>
-                    <td>${formatarData(pessoa.data_nascimento)}</td>                 
-                `;
-        pessoasTableBody.appendChild(row);
+function popularSelectCargos() {
+    const select = document.getElementById('cargo_id_cargo');
+    select.innerHTML = '<option value="">Selecione o cargo</option>';
+    cargosCache.forEach(cargo => {
+        select.innerHTML += `<option value="${cargo.id_cargo}">${cargo.nome_cargo}</option>`;
     });
 }
 
-// Função para selecionar pessoa da tabela
-async function selecionarPessoa(id) {
-    searchId.value = id;
-    await buscarPessoa();
+async function carregarPessoas() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/pessoa`);
+        if (!response.ok) throw new Error('Erro ao carregar pessoas');
+        
+        const pessoas = await response.json();
+        renderizarTabela(pessoas);
+    } catch (error) {
+        console.error('Erro:', error);
+        pessoasTableBody.innerHTML = '<tr><td colspan="5" class="error">Erro ao carregar dados</td></tr>';
+    }
+}
+
+function renderizarTabela(pessoas) {
+    if (!pessoas || pessoas.length === 0) {
+        pessoasTableBody.innerHTML = '<tr><td colspan="5" class="empty">Nenhuma pessoa cadastrada</td></tr>';
+        return;
+    }
+
+    pessoasTableBody.innerHTML = pessoas.map(p => {
+        const tipoLabel = p.tipo === 'funcionario' ? '👔 Funcionário' : 
+                          p.tipo === 'cliente' ? '👤 Cliente' : '👥 Pessoa';
+        
+        let infoExtra = '-';
+        if (p.tipo === 'funcionario') {
+            infoExtra = p.nome_cargo || 'Sem cargo';
+        } else if (p.tipo === 'cliente') {
+            infoExtra = formatarMoeda(p.renda_cliente);
+        }
+
+        return `
+            <tr onclick="selecionarPessoa('${p.cpf_pessoa}')" style="cursor: pointer;">
+                <td><code>${formatarCpf(p.cpf_pessoa)}</code></td>
+                <td>${p.nome_pessoa || '-'}</td>
+                <td>${p.email_pessoa || '-'}</td>
+                <td><span class="badge badge-${p.tipo}">${tipoLabel}</span></td>
+                <td>${infoExtra}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// ============================================================================
+// OPERAÇÕES CRUD
+// ============================================================================
+async function buscarPessoa() {
+    const cpf = limparCpf(searchCpf.value);
+    
+    if (!cpf || cpf.length !== 11) {
+        toast('Digite um CPF válido com 11 dígitos', 'warning');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/pessoa/${cpf}`);
+        
+        if (response.ok) {
+            const pessoa = await response.json();
+            preencherFormulario(pessoa);
+            cpfAtual = cpf;
+            
+            formFields.disabled = true;
+            mostrarBotoes(['btnAlterar', 'btnExcluir', 'btnCancelar']);
+            toast('Pessoa encontrada!', 'success');
+            
+        } else if (response.status === 404) {
+            limparFormulario();
+            document.getElementById('cpf_pessoa').value = formatarCpf(cpf);
+            toast('CPF não encontrado. Clique em "Novo" para cadastrar.', 'info');
+            mostrarBotoes(['btnNovo', 'btnCancelar']);
+        } else {
+            throw new Error('Erro na busca');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        toast('Erro ao buscar pessoa', 'danger');
+    }
+}
+
+function novaPessoa() {
+    limparFormulario();
+    operacao = 'incluir';
+    cpfAtual = null;
+    
+    // Se já tem CPF na busca, usar
+    const cpfBusca = limparCpf(searchCpf.value);
+    if (cpfBusca.length === 11) {
+        document.getElementById('cpf_pessoa').value = formatarCpf(cpfBusca);
+    }
+    
+    formFields.disabled = false;
+    document.getElementById('cpf_pessoa').disabled = false; // Habilitar CPF para nova pessoa
+    document.getElementById('cpf_pessoa').focus();
+    mostrarBotoes(['btnSalvar', 'btnCancelar']);
+    toast('Preencha os dados da nova pessoa', 'info');
+}
+
+function habilitarAlteracao() {
+    operacao = 'alterar';
+    formFields.disabled = false;
+    document.getElementById('cpf_pessoa').disabled = true; // CPF não pode mudar
+    document.getElementById('nome_pessoa').focus();
+    mostrarBotoes(['btnSalvar', 'btnCancelar']);
+    toast('Editando dados...', 'info');
+}
+
+async function salvarPessoa() {
+    // Validações
+    const cpf = limparCpf(document.getElementById('cpf_pessoa').value);
+    const nome = document.getElementById('nome_pessoa').value.trim();
+    const email = document.getElementById('email_pessoa').value.trim();
+    const senha = document.getElementById('senha_pessoa').value;
+    const tipo = document.getElementById('tipo').value;
+
+    if (!cpf || cpf.length !== 11) {
+        toast('CPF inválido (11 dígitos)', 'warning');
+        return;
+    }
+    if (!nome) {
+        toast('Nome é obrigatório', 'warning');
+        return;
+    }
+    if (!email) {
+        toast('Email é obrigatório', 'warning');
+        return;
+    }
+    if (operacao === 'incluir' && !senha) {
+        toast('Senha é obrigatória para novo cadastro', 'warning');
+        return;
+    }
+    if (!tipo) {
+        toast('Selecione o tipo (Cliente ou Funcionário)', 'warning');
+        return;
+    }
+
+    // Montar dados
+    const dados = {
+        cpf_pessoa: cpf,
+        nome_pessoa: nome,
+        email_pessoa: email,
+        data_nascimento_pessoa: document.getElementById('data_nascimento_pessoa').value || null,
+        endereco_pessoa: document.getElementById('endereco_pessoa').value || null,
+        tipo: tipo
+    };
+
+    // Senha (só incluir se preenchida)
+    if (senha) {
+        dados.senha_pessoa = senha;
+    }
+
+    // Dados específicos de tipo
+    if (tipo === 'cliente') {
+        dados.renda_cliente = parseFloat(document.getElementById('renda_cliente').value) || 0;
+    } else if (tipo === 'funcionario') {
+        const cargo = document.getElementById('cargo_id_cargo').value;
+        if (!cargo) {
+            toast('Cargo é obrigatório para funcionário', 'warning');
+            return;
+        }
+        dados.cargo_id_cargo = parseInt(cargo);
+        dados.salario_funcionario = parseFloat(document.getElementById('salario_funcionario').value) || 0;
+        dados.porcentagem_comissao_funcionario = parseFloat(document.getElementById('porcentagem_comissao_funcionario').value) || 0;
+    }
+
+    try {
+        let response;
+        
+        if (operacao === 'incluir') {
+            response = await fetch(`${API_BASE_URL}/pessoa`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dados)
+            });
+        } else {
+            response = await fetch(`${API_BASE_URL}/pessoa/${cpfAtual || cpf}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dados)
+            });
+        }
+
+        if (response.ok) {
+            const resultado = await response.json();
+            toast(operacao === 'incluir' ? '✅ Pessoa cadastrada!' : '✅ Dados atualizados!', 'success');
+            await carregarPessoas();
+            resetarEstado();
+        } else {
+            const error = await response.json();
+            toast(error.error || 'Erro ao salvar', 'danger');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        toast('Erro de conexão', 'danger');
+    }
+}
+
+async function excluirPessoa() {
+    if (!cpfAtual) {
+        toast('Nenhuma pessoa selecionada', 'warning');
+        return;
+    }
+
+    if (!confirm(`Deseja realmente excluir a pessoa com CPF ${formatarCpf(cpfAtual)}?\n\nIsso também excluirá os dados de cliente/funcionário associados.`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/pessoa/${cpfAtual}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok || response.status === 204) {
+            toast('✅ Pessoa excluída!', 'success');
+            await carregarPessoas();
+            resetarEstado();
+        } else {
+            const error = await response.json();
+            toast(error.error || 'Erro ao excluir', 'danger');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        toast('Erro de conexão', 'danger');
+    }
+}
+
+function cancelarOperacao() {
+    resetarEstado();
+    toast('Operação cancelada', 'info');
+}
+
+// ============================================================================
+// AUXILIARES
+// ============================================================================
+function preencherFormulario(pessoa) {
+    document.getElementById('cpf_pessoa').value = formatarCpf(pessoa.cpf_pessoa);
+    document.getElementById('nome_pessoa').value = pessoa.nome_pessoa || '';
+    document.getElementById('email_pessoa').value = pessoa.email_pessoa || '';
+    document.getElementById('senha_pessoa').value = ''; // Nunca preencher senha
+    document.getElementById('endereco_pessoa').value = pessoa.endereco_pessoa || '';
+    
+    if (pessoa.data_nascimento_pessoa) {
+        const data = new Date(pessoa.data_nascimento_pessoa);
+        document.getElementById('data_nascimento_pessoa').value = data.toISOString().split('T')[0];
+    } else {
+        document.getElementById('data_nascimento_pessoa').value = '';
+    }
+
+    // Tipo
+    document.getElementById('tipo').value = pessoa.tipo || '';
+    atualizarCamposCondicionais();
+
+    // Dados de cliente
+    if (pessoa.tipo === 'cliente') {
+        document.getElementById('renda_cliente').value = pessoa.renda_cliente || 0;
+        document.getElementById('data_cadastro_cliente').value = formatarData(pessoa.data_cadastro_cliente);
+    }
+
+    // Dados de funcionário
+    if (pessoa.tipo === 'funcionario') {
+        document.getElementById('cargo_id_cargo').value = pessoa.cargo_id_cargo || '';
+        document.getElementById('salario_funcionario').value = pessoa.salario_funcionario || 0;
+        document.getElementById('porcentagem_comissao_funcionario').value = pessoa.porcentagem_comissao_funcionario || 0;
+    }
+}
+
+function limparFormulario() {
+    form.reset();
+    document.getElementById('data_cadastro_cliente').value = '';
+    atualizarCamposCondicionais();
+}
+
+function resetarEstado() {
+    limparFormulario();
+    searchCpf.value = '';
+    operacao = null;
+    cpfAtual = null;
+    formFields.disabled = true;
+    document.getElementById('cpf_pessoa').disabled = false; // Resetar estado do CPF
+    mostrarBotoes(['btnBuscar', 'btnNovo']);
+    searchCpf.focus();
+}
+
+function atualizarCamposCondicionais() {
+    const tipo = tipoSelect.value;
+    
+    camposCliente.style.display = tipo === 'cliente' ? 'block' : 'none';
+    camposFuncionario.style.display = tipo === 'funcionario' ? 'block' : 'none';
+    
+    // Required nos campos condicionais
+    document.getElementById('renda_cliente').required = (tipo === 'cliente');
+    document.getElementById('cargo_id_cargo').required = (tipo === 'funcionario');
+}
+
+function mostrarBotoes(visibles) {
+    const allBtns = ['btnBuscar', 'btnNovo', 'btnSalvar', 'btnAlterar', 'btnExcluir', 'btnCancelar'];
+    allBtns.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.style.display = visibles.includes(id) ? 'inline-block' : 'none';
+    });
+}
+
+// Função global para clique na tabela
+window.selecionarPessoa = function(cpf) {
+    searchCpf.value = formatarCpf(cpf);
+    buscarPessoa();
+};
+
+// ============================================================================
+// TOAST
+// ============================================================================
+function toast(msg, type = 'info') {
+    let box = document.getElementById('toast-box');
+    if (!box) {
+        box = document.createElement('div');
+        box.id = 'toast-box';
+        document.body.appendChild(box);
+    }
+    
+    const el = document.createElement('div');
+    el.className = `toast toast-${type}`;
+    el.textContent = msg;
+    box.appendChild(el);
+    
+    setTimeout(() => el.classList.add('show'), 10);
+    setTimeout(() => {
+        el.classList.remove('show');
+        setTimeout(() => el.remove(), 300);
+    }, 3000);
+}
+
+// ============================================================================
+// LOGOUT
+// ============================================================================
+function logout() {
+    document.cookie = 'usuario=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    window.location.href = '/login/login.html';
 }

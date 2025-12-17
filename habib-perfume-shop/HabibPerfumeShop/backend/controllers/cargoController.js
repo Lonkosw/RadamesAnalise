@@ -2,11 +2,12 @@ const { query } = require('../database');
 const path = require('path');
 
 exports.abrirCrudCargo = (req, res) => {
-  const usuario = req.cookies.usuarioLogado;
+  // Verifica cookie 'usuario' (usado pelo sistema de login)
+  const usuario = req.cookies.usuario;
   if (usuario) {
     res.sendFile(path.join(__dirname, '../../frontend/cargo/cargo.html'));
   } else {
-    res.redirect('/login');
+    res.redirect('/login/login.html');
   }
 };
 

@@ -1,10 +1,11 @@
 /**
  * Carrinho de Compras - Frontend
- * Armazenamento: Cookie 'carrinho' (JSON array de { id_produto, quantidade, preco_unitario, nome_produto })
- * Integração: Backend /pedido/carrinho/* para persistência e finalização
+ * Armazenamento: sessionStorage 'carrinho' (compatível com menu.html)
+ * Estrutura: { id, nome, preco, quantidade } ou { id_produto, nome_produto, preco_unitario, quantidade }
  */
 (function(){
   const API = 'http://localhost:3001/pedido';
+  const API_PRODUTO = 'http://localhost:3001/produto';
   const listaEl = document.getElementById('listaCarrinho');
   const resumoEl = document.getElementById('resumo');
   const feedbackEl = document.getElementById('feedback');
@@ -12,17 +13,48 @@
   const qtdItensEl = document.getElementById('qtdItens');
   const subtotalEl = document.getElementById('subtotal');
   const totalValorEl = document.getElementById('totalValor');
+  
+  // Cache de estoque dos produtos
+  let estoqueProdutos = {};
 
-  // ==================== COOKIE HELPERS ====================
-  function getCarrinhoCookie(){
-    const match = document.cookie.match(/(?:^|;\s*)carrinho=([^;]*)/);
-    if(!match) return [];
-    try { return JSON.parse(decodeURIComponent(match[1])); } catch { return []; }
+  // ==================== STORAGE HELPERS ====================
+  // Usa localStorage para persistir carrinho entre sessões
+  function getCarrinho(){
+    try {
+      const data = localStorage.getItem('carrinho');
+      if(!data) return [];
+      return JSON.parse(data);
+    } catch { return []; }
   }
 
-  function setCarrinhoCookie(items){
-    const val = encodeURIComponent(JSON.stringify(items));
-    document.cookie = `carrinho=${val}; path=/; max-age=${60*60*24*7}`; // 7 dias
+  function setCarrinho(items){
+    localStorage.setItem('carrinho', JSON.stringify(items));
+  }
+  
+  // Normaliza item para formato padronizado (aceita ambos os formatos)
+  function normalizeItem(item) {
+    return {
+      id_produto: item.id_produto || item.id,
+      nome_produto: item.nome_produto || item.nome,
+      preco_unitario: Number(item.preco_unitario || item.preco || 0),
+      marca: item.marca || '',
+      quantidade: item.quantidade || 1
+    };
+  }
+
+  // ==================== ESTOQUE ====================
+  async function carregarEstoque() {
+    try {
+      const res = await fetch(API_PRODUTO);
+      if (res.ok) {
+        const produtos = await res.json();
+        produtos.forEach(p => {
+          estoqueProdutos[p.id_produto] = p.quantidade_estoque || 0;
+        });
+      }
+    } catch (e) {
+      console.error('Erro ao carregar estoque:', e);
+    }
   }
 
   // ==================== RENDER ====================
@@ -30,8 +62,13 @@
     return 'R$ ' + Number(v||0).toFixed(2).replace('.', ',');
   }
 
-  function renderCarrinho(){
-    const items = getCarrinhoCookie();
+  async function renderCarrinho(){
+    // Carregar estoque antes de renderizar
+    await carregarEstoque();
+    
+    const rawItems = getCarrinho();
+    // Normaliza todos os itens
+    const items = rawItems.map(normalizeItem);
     
     if(items.length === 0){
       listaEl.innerHTML = `
@@ -56,10 +93,10 @@
       
       html += `
         <div class="carrinho-item" data-idx="${idx}">
-          <img src="/imagens-produtos/${item.id_produto}.png" alt="${item.nome_produto}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23999%22 font-size=%2212%22>Sem img</text></svg>'">
+          <img src="/view-image/${item.id_produto}" alt="${item.nome_produto}" onerror="this.src='/imagens-produtos/default.png'">
           <div class="info">
             <h3>${item.nome_produto}</h3>
-            <p>${formatPrice(item.preco_unitario)} cada</p>
+            <p>${item.marca ? `<span class="item-marca">🏷️ ${item.marca}</span> • ` : ''}${formatPrice(item.preco_unitario)} cada</p>
           </div>
           <div class="quantidade">
             <button class="btn-menos" data-idx="${idx}">−</button>
@@ -92,70 +129,51 @@
 
   // ==================== ACTIONS ====================
   function alterarQuantidade(idx, delta){
-    const items = getCarrinhoCookie();
+    const rawItems = getCarrinho();
+    const items = rawItems.map(normalizeItem);
     if(!items[idx]) return;
-    items[idx].quantidade += delta;
-    if(items[idx].quantidade <= 0){
-      items.splice(idx, 1);
+    
+    const novaQuantidade = items[idx].quantidade + delta;
+    
+    // Se está aumentando, verificar estoque
+    if (delta > 0) {
+      const idProduto = items[idx].id_produto;
+      const estoqueDisponivel = estoqueProdutos[idProduto] || 0;
+      
+      if (novaQuantidade > estoqueDisponivel) {
+        showFeedback(`⚠️ Estoque insuficiente! Disponível: ${estoqueDisponivel} unidade(s)`, false);
+        return;
+      }
     }
-    setCarrinhoCookie(items);
+    
+    rawItems[idx].quantidade = novaQuantidade;
+    if(rawItems[idx].quantidade <= 0){
+      rawItems.splice(idx, 1);
+    }
+    setCarrinho(rawItems);
     renderCarrinho();
     atualizarBadge();
   }
 
   function removerItem(idx){
-    const items = getCarrinhoCookie();
+    const items = getCarrinho();
     items.splice(idx, 1);
-    setCarrinhoCookie(items);
+    setCarrinho(items);
     renderCarrinho();
     atualizarBadge();
     showFeedback('Item removido', true);
   }
 
   async function finalizarCompra(){
-    const items = getCarrinhoCookie();
-    if(items.length === 0){
+    const rawItems = getCarrinho();
+    if(rawItems.length === 0){
       showFeedback('Carrinho vazio', false);
       return;
     }
 
-    btnFinalizar.disabled = true;
-    btnFinalizar.textContent = 'Processando...';
-
-    try {
-      const res = await fetch(`${API}/carrinho/finalizar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ itens: items })
-      });
-
-      const data = await res.json();
-      
-      if(!res.ok){
-        throw new Error(data.error || 'Erro ao finalizar');
-      }
-
-      // Limpar carrinho
-      setCarrinhoCookie([]);
-      atualizarBadge();
-      
-      // Mostrar sucesso
-      listaEl.innerHTML = `
-        <div class="carrinho-vazio" style="color:#1a6b2d;">
-          <h2>✓ Compra realizada com sucesso!</h2>
-          <p>Pedido #${data.id_pedido} criado</p>
-          <p style="margin-top:10px;">Total: ${formatPrice(data.total)}</p>
-          <a href="/menu" class="btn-continuar" style="display:inline-block;margin-top:20px;background:#1a6b2d;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;">Voltar às Compras</a>
-        </div>
-      `;
-      resumoEl.hidden = true;
-
-    } catch(err){
-      showFeedback(err.message, false);
-      btnFinalizar.disabled = false;
-      btnFinalizar.textContent = 'Finalizar Compra';
-    }
+    // Redireciona para página de finalização (igual ao fluxo do cliente)
+    // A página de finalização cria o pedido e redireciona para pagamento
+    window.location.href = '../visaoCliente/finalizar/finalizar.html';
   }
 
   // ==================== HELPERS ====================
@@ -167,14 +185,18 @@
   }
 
   function atualizarBadge(){
-    // Atualizar badge no header se existir
-    const badge = document.getElementById('carrinho-badge');
+    // Atualizar badge no header se existir (tenta ambos os IDs)
+    const badge = document.getElementById('cart-badge') || document.getElementById('carrinho-badge');
+    const items = getCarrinho();
+    const qtd = items.reduce((acc, i) => acc + (i.quantidade || 1), 0);
+    
     if(badge){
-      const items = getCarrinhoCookie();
-      const qtd = items.reduce((acc, i) => acc + i.quantidade, 0);
       badge.textContent = qtd;
       badge.style.display = qtd > 0 ? 'inline-block' : 'none';
     }
+    
+    // Dispara evento global para outras partes da página saberem que o carrinho mudou
+    window.dispatchEvent(new CustomEvent('carrinhoAtualizado', { detail: { quantidade: qtd, itens: items } }));
   }
 
   // ==================== INIT ====================
@@ -186,27 +208,28 @@
 
   // Expor função globalmente para uso em outros scripts
   window.CarrinhoUtils = {
-    getCarrinho: getCarrinhoCookie,
-    setCarrinho: setCarrinhoCookie,
+    getCarrinho: getCarrinho,
+    setCarrinho: setCarrinho,
     adicionar: function(produto){
-      const items = getCarrinhoCookie();
-      const idx = items.findIndex(i => i.id_produto === produto.id_produto);
+      const items = getCarrinho();
+      const idProduto = produto.id_produto || produto.id;
+      const idx = items.findIndex(i => (i.id_produto || i.id) === idProduto);
       if(idx >= 0){
         items[idx].quantidade += produto.quantidade || 1;
       } else {
         items.push({
-          id_produto: produto.id_produto,
-          nome_produto: produto.nome_produto,
-          preco_unitario: produto.preco_unitario,
+          id: idProduto,
+          nome: produto.nome_produto || produto.nome,
+          preco: Number(produto.preco_unitario || produto.preco || 0),
           quantidade: produto.quantidade || 1
         });
       }
-      setCarrinhoCookie(items);
+      setCarrinho(items);
       atualizarBadge();
       return items;
     },
     getQtdTotal: function(){
-      return getCarrinhoCookie().reduce((acc, i) => acc + i.quantidade, 0);
+      return getCarrinho().reduce((acc, i) => acc + (i.quantidade || 1), 0);
     }
   };
 })();

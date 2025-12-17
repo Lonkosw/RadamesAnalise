@@ -109,7 +109,10 @@
       <div id="resultado-area" class="resultado-area hidden">
         <div class="resultado-header">
           <h2 id="resultado-titulo">Resultado</h2>
-          <button id="btn-imprimir" class="btn btn-secondary">🖨️ Imprimir</button>
+          <div class="resultado-acoes">
+            <button id="btn-imprimir" class="btn btn-secondary">🖨️ Imprimir</button>
+            <button id="btn-exportar-pdf" class="btn btn-primary">📄 Salvar PDF</button>
+          </div>
         </div>
         <div id="resultado-conteudo"></div>
       </div>
@@ -153,6 +156,12 @@
       try {
         const res = await fetch(`${API_BASE_URL}/relatorio/vendas-periodo?mes=${mes}&ano=${ano}`, { credentials: 'include' });
         const data = await res.json();
+        
+        if (!data.success || !data.periodo) {
+          alert('Erro ao gerar relatório: ' + (data.error || 'Dados inválidos retornados pela API'));
+          return;
+        }
+        
         exibirRelatorioVendas(data);
       } catch (error) {
         alert('Erro ao gerar relatório: ' + error.message);
@@ -171,6 +180,12 @@
       try {
         const res = await fetch(url, { credentials: 'include' });
         const data = await res.json();
+        
+        if (!data.success || !data.ranking) {
+          alert('Erro ao gerar relatório: ' + (data.error || 'Dados inválidos retornados pela API'));
+          return;
+        }
+        
         exibirRelatorioProdutos(data);
       } catch (error) {
         alert('Erro ao gerar relatório: ' + error.message);
@@ -374,6 +389,13 @@
 
     // Botão de Imprimir
     document.getElementById('btn-imprimir').addEventListener('click', () => {
+      window.print();
+    });
+
+    // Botão de Exportar PDF (abre diálogo de impressão configurado para PDF)
+    document.getElementById('btn-exportar-pdf').addEventListener('click', () => {
+      // Dica para o usuário
+      alert('Na janela de impressão que vai abrir, selecione "Salvar como PDF" como destino da impressora.');
       window.print();
     });
   </script>

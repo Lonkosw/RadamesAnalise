@@ -50,17 +50,20 @@
 }
 
 .card-relatorio {
-    background-color: var(--bg-white);
+    background: rgba(30, 30, 30, 0.9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-radius: var(--radius-lg);
-    padding: 24px;
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-md);
-    transition: var(--transition-base);
+    padding: 28px;
+    border: 1px solid rgba(139, 0, 0, 0.25);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-relatorio:hover {
     transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 12px 40px rgba(139, 0, 0, 0.3), 0 0 30px rgba(139, 0, 0, 0.1);
+    border-color: rgba(139, 0, 0, 0.5);
 }
 
 .card-icon {
@@ -108,19 +111,20 @@
 .relatorio-form .form-group input {
     width: 100%;
     padding: 10px 14px;
-    border: 2px solid var(--border-color);
+    border: 2px solid #3A3A3A;
     border-radius: var(--radius-md);
     font-size: 1rem;
     font-family: inherit;
     transition: var(--transition-base);
-    background-color: var(--bg-white);
+    background-color: #1A1A1A;
+    color: #F5F5F5;
 }
 
 .relatorio-form .form-group select:focus,
 .relatorio-form .form-group input:focus {
     outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(139, 75, 139, 0.15);
+    border-color: #8B0000;
+    box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.2);
 }
 
 .btn-block {
@@ -132,11 +136,11 @@
    ============================================ */
 
 .resultado-area {
-    background-color: var(--bg-white);
+    background-color: #2B2B2B;
     border-radius: var(--radius-lg);
     padding: 24px;
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-md);
+    border: 1px solid #3A3A3A;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
     margin-top: 24px;
 }
 
@@ -159,6 +163,17 @@
     font-size: 1.25rem;
 }
 
+.resultado-acoes {
+    display: flex;
+    gap: 12px;
+}
+
+.resultado-acoes .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
 /* ============================================
    RELATÓRIO PARA IMPRESSÃO
    ============================================ */
@@ -171,11 +186,11 @@
     text-align: center;
     margin-bottom: 24px;
     padding-bottom: 20px;
-    border-bottom: 3px solid var(--color-primary);
+    border-bottom: 3px solid #8B0000;
 }
 
 .relatorio-cabecalho h1 {
-    color: var(--color-primary);
+    color: #8B0000;
     margin: 0 0 4px;
     font-size: 1.75rem;
 }
@@ -202,10 +217,11 @@
    ============================================ */
 
 .resumo-box {
-    background: linear-gradient(135deg, var(--bg-light), var(--bg-body));
+    background: linear-gradient(135deg, #1A1A1A, #222222);
     border-radius: var(--radius-md);
     padding: 20px;
     margin-bottom: 24px;
+    border: 1px solid #3A3A3A;
 }
 
 .resumo-box h3 {
@@ -223,11 +239,12 @@
 }
 
 .resumo-item {
-    background-color: var(--bg-white);
+    background-color: #2B2B2B;
     padding: 16px;
     border-radius: var(--radius-md);
     text-align: center;
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border: 1px solid #3A3A3A;
 }
 
 .resumo-item .label {
@@ -247,7 +264,8 @@
 }
 
 .resumo-item.destaque {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    background: linear-gradient(135deg, #8B0000, #720000);
+    border-color: #8B0000;
 }
 
 .resumo-item.destaque .label,
@@ -280,8 +298,8 @@ h3 {
 }
 
 .tabela-relatorio th {
-    background-color: var(--color-primary);
-    color: var(--text-white);
+    background-color: #8B0000;
+    color: #F5F5F5;
     font-weight: 600;
     text-transform: uppercase;
     font-size: 0.75rem;
@@ -289,11 +307,11 @@ h3 {
 }
 
 .tabela-relatorio tbody tr:hover {
-    background-color: var(--bg-light);
+    background-color: rgba(139, 0, 0, 0.1);
 }
 
 .tabela-relatorio tbody tr:nth-child(even) {
-    background-color: var(--bg-body);
+    background-color: rgba(255, 255, 255, 0.02);
 }
 
 /* ============================================
@@ -309,18 +327,18 @@ h3 {
 }
 
 .badge-success {
-    background-color: #D4EDDA;
-    color: #155724;
+    background-color: rgba(40, 167, 69, 0.2);
+    color: #4caf50;
 }
 
 .badge-warning {
-    background-color: #FFF3CD;
-    color: #856404;
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
 }
 
 .badge-danger {
-    background-color: #F8D7DA;
-    color: #721C24;
+    background-color: rgba(139, 0, 0, 0.2);
+    color: #ff6b6b;
 }
 
 /* ============================================
@@ -371,13 +389,15 @@ h3 {
         background: white !important;
         print-color-adjust: exact;
         -webkit-print-color-adjust: exact;
+        color: #000 !important;
     }
     
     .header-padrao,
     .relatorios-grid,
-    #btn-imprimir,
     .resultado-header,
-    .footer-padrao {
+    .resultado-acoes,
+    .footer-padrao,
+    .page-title-section {
         display: none !important;
     }
     

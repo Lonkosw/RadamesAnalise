@@ -4,30 +4,37 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Carrinho de Compras</title>
-  <link rel="stylesheet" href="../common/crud.css">
+  <link rel="stylesheet" href="/styles/global.css">
   <style>
-    .carrinho-container { max-width: 900px; margin: 0 auto; padding: 20px; }
-    .carrinho-vazio { text-align: center; padding: 60px 20px; color: #666; }
-    .carrinho-vazio h2 { margin-bottom: 10px; }
-    .carrinho-item { display: grid; grid-template-columns: 80px 1fr auto auto auto; gap: 16px; align-items: center; padding: 16px; background: #fff; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
-    .carrinho-item img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; background: #f0f0f0; }
-    .carrinho-item .info h3 { margin: 0 0 4px; font-size: 1rem; }
-    .carrinho-item .info p { margin: 0; color: #666; font-size: .85rem; }
+    body { background: #1A1A1A; color: #E0E0E0; min-height: 100vh; }
+    .carrinho-container { max-width: 900px; margin: 0 auto; padding: 20px; padding-top: 100px; }
+    .carrinho-container h1 { color: #fff; margin-bottom: 24px; }
+    .carrinho-vazio { text-align: center; padding: 60px 20px; color: #999; }
+    .carrinho-vazio h2 { margin-bottom: 10px; color: #E0E0E0; }
+    .carrinho-item { display: grid; grid-template-columns: 80px 1fr auto auto auto; gap: 16px; align-items: center; padding: 16px; background: #2B2B2B; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+    .carrinho-item img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; background: #3A3A3A; }
+    .carrinho-item .info h3 { margin: 0 0 4px; font-size: 1rem; color: #fff; }
+    .carrinho-item .info p { margin: 0; color: #999; font-size: .85rem; }
+    .carrinho-item .info .item-marca { color: #8B0000; font-weight: 600; }
     .carrinho-item .quantidade { display: flex; align-items: center; gap: 8px; }
-    .carrinho-item .quantidade button { width: 28px; height: 28px; border: none; background: #ddd; border-radius: 4px; cursor: pointer; font-size: 1rem; }
-    .carrinho-item .quantidade button:hover { background: #ccc; }
-    .carrinho-item .quantidade span { min-width: 30px; text-align: center; font-weight: 600; }
-    .carrinho-item .preco { font-weight: 700; color: #1a6b2d; font-size: 1.1rem; min-width: 100px; text-align: right; }
-    .carrinho-item .remover { background: #dc3545; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: .8rem; }
-    .carrinho-item .remover:hover { background: #c82333; }
-    .carrinho-resumo { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.08); margin-top: 20px; }
-    .carrinho-resumo .linha { display: flex; justify-content: space-between; margin-bottom: 10px; }
-    .carrinho-resumo .total { font-size: 1.3rem; font-weight: 700; border-top: 2px solid #eee; padding-top: 10px; margin-top: 10px; }
-    .carrinho-resumo .total .valor { color: #1a6b2d; }
-    .btn-finalizar { width: 100%; padding: 14px; background: #1a6b2d; color: #fff; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 16px; }
-    .btn-finalizar:hover { background: #145424; }
-    .btn-finalizar:disabled { background: #ccc; cursor: not-allowed; }
-    .btn-continuar { display: block; text-align: center; margin-top: 12px; color: #23518a; text-decoration: none; }
+    .carrinho-item .quantidade button { width: 28px; height: 28px; border: none; background: #3A3A3A; color: #fff; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+    .carrinho-item .quantidade button:hover { background: #8B0000; }
+    .carrinho-item .quantidade span { min-width: 30px; text-align: center; font-weight: 600; color: #fff; }
+    .carrinho-item .preco { font-weight: 700; color: #8B0000; font-size: 1.1rem; min-width: 100px; text-align: right; }
+    .carrinho-item .remover { background: #8B0000; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: .8rem; }
+    .carrinho-item .remover:hover { background: #A00000; }
+    .carrinho-resumo { background: #2B2B2B; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.3); margin-top: 20px; }
+    .carrinho-resumo .linha { display: flex; justify-content: space-between; margin-bottom: 10px; color: #E0E0E0; }
+    .carrinho-resumo .total { font-size: 1.3rem; font-weight: 700; border-top: 2px solid #3A3A3A; padding-top: 10px; margin-top: 10px; }
+    .carrinho-resumo .total .valor { color: #8B0000; }
+    .btn-finalizar { width: 100%; padding: 14px; background: #8B0000; color: #fff; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 16px; }
+    .btn-finalizar:hover { background: #A00000; }
+    .btn-finalizar:disabled { background: #555; cursor: not-allowed; }
+    .btn-continuar { display: block; text-align: center; margin-top: 12px; color: #8B0000; text-decoration: none; }
+    .btn-continuar:hover { color: #A00000; text-decoration: underline; }
+    .feedback { padding: 12px; border-radius: 6px; margin-bottom: 16px; }
+    .feedback.success { background: rgba(139, 0, 0, 0.2); color: #ff6b6b; }
+    .feedback.error { background: rgba(220, 53, 69, 0.2); color: #ff6b6b; }
     @media (max-width: 600px) {
       .carrinho-item { grid-template-columns: 60px 1fr; gap: 10px; }
       .carrinho-item .quantidade, .carrinho-item .preco, .carrinho-item .remover { grid-column: 2; }

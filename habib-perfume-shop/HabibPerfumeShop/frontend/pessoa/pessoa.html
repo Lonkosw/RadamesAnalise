@@ -1,116 +1,183 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRUD - Pessoa</title>
-    <link rel="stylesheet" href="/pessoa/pessoa.css">
+    <title>Gestão de Pessoas - Habib Perfume Shop</title>
+    <link rel="stylesheet" href="/styles/global.css">
+    <link rel="stylesheet" href="/pessoa-static/pessoa.css">
 </head>
-
 <body>
-    <header>
-        <h1>CRUD Pessoa</h1>
+    <!-- Header -->
+    <header class="header-padrao">
+        <div class="header-content">
+            <a href="/menu" class="logo">🌸 Habib Perfume Shop</a>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="/menu">🏠 Home</a></li>
+                    <li><a href="/pessoa/abrirCrudPessoa">👥 Gestão de Pessoas</a></li>
+                </ul>
+            </nav>
+            <div class="usuario-info">
+                <span id="nomeUsuario">Admin</span>
+                <a href="#" onclick="logout()" class="btn btn-sm btn-outline">Sair</a>
+            </div>
+        </div>
     </header>
 
-    <main>
-        <section class="form-section">
-            <h2>Cadastro de Pessoa</h2>
+    <main class="container">
+        <section class="crud-section">
+            <h1 class="page-title">👥 Gestão de Pessoas</h1>
+            <p class="page-subtitle">Cadastro unificado de Clientes e Funcionários</p>
 
-            <form id="pessoaForm">
-                <div class="search-container">
-                    <label for="searchId">Buscar por ID:</label>
-                    <div class="search-input-group">
-                        <input type="number" id="searchId" placeholder="Digite o ID para buscar">
-                        <button type="button" id="btnBuscar">🔍 Buscar</button>
-
-                        <button type="button" id="btnIncluir" class="btn-primary">Incluir</button>
-                        <button type="button" id="btnAlterar" class="btn-secondary"
-                            style="display: none;">Alterar</button>
-                        <button type="button" id="btnExcluir" class="btn-danger" style="display: none;">Excluir</button>
-                        <button type="button" id="btnSalvar" class="btn-save" style="display: none;">Salvar</button>
-                        <button type="button" id="btnCancelar" class="btn-cancel">Cancelar</button>
-                    </div>
-                </div>
-
-                <fieldset id="formFields">
-                    <legend>Dados da Pessoa</legend>
-
-                    <div class="form-group">
-                        <label for="nome_pessoa">Nome:</label>
-                        <input type="text" id="nome_pessoa" name="nome_pessoa" required>
+            <!-- Formulário -->
+            <div class="form-card">
+                <form id="pessoaForm">
+                    <!-- Busca por CPF -->
+                    <div class="search-bar">
+                        <div class="input-group">
+                            <label for="searchCpf">CPF:</label>
+                            <input type="text" id="searchCpf" placeholder="Digite o CPF (11 dígitos)" maxlength="14">
+                        </div>
+                        <div class="btn-group">
+                            <button type="button" id="btnBuscar" class="btn btn-info">🔍 Buscar</button>
+                            <button type="button" id="btnNovo" class="btn btn-success">➕ Novo</button>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="email_pessoa">Email:</label>
-                        <input type="email" id="email_pessoa" name="email_pessoa" required>
-                    </div>
+                    <!-- Dados Básicos -->
+                    <fieldset id="formFields" disabled>
+                        <legend>Dados da Pessoa</legend>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cpf_pessoa">CPF: *</label>
+                                <input type="text" id="cpf_pessoa" name="cpf_pessoa" placeholder="000.000.000-00" maxlength="14" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="nome_pessoa">Nome: *</label>
+                                <input type="text" id="nome_pessoa" name="nome_pessoa" placeholder="Nome completo" required>
+                            </div>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="senha_pessoa">Senha:</label>
-                        <input type="password" id="senha_pessoa" name="senha_pessoa" required>
-                    </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email_pessoa">Email: *</label>
+                                <input type="email" id="email_pessoa" name="email_pessoa" placeholder="email@exemplo.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="senha_pessoa">Senha: *</label>
+                                <input type="password" id="senha_pessoa" name="senha_pessoa" placeholder="Mínimo 6 caracteres">
+                            </div>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="primeiro_acesso_pessoa">Primeiro Acesso:</label>
-                        <select id="primeiro_acesso_pessoa" name="primeiro_acesso_pessoa">
-                            <option value="true">Sim</option>
-                            <option value="false">Não</option>
-                        </select>
-                    </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="data_nascimento_pessoa">Data de Nascimento:</label>
+                                <input type="date" id="data_nascimento_pessoa" name="data_nascimento_pessoa">
+                            </div>
+                            <div class="form-group">
+                                <label for="endereco_pessoa">Endereço:</label>
+                                <input type="text" id="endereco_pessoa" name="endereco_pessoa" placeholder="Endereço completo">
+                            </div>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="data_nascimento">Data de Nascimento:</label>
-                        <input type="date" id="data_nascimento" name="data_nascimento">
-                    </div>
-                </fieldset>
-            </form>
-            <div class="umParaum">
-                <div class="professor">
-                    <input type="checkbox" id="checkboxProfessor" name="checkboxProfessor">
-                    <span id="spanProfessor">Professor</span>
-                    <input type="text" id="mnemonicoProfessor" name="mnemonicoProfessor" placeholder="Mnemônico" style="display: inline;">
-                    <input type="text" id="departamentoProfessor" name="departamentoProfessor" placeholder="Departamento" style="display: inline;">
+                        <!-- TIPO: Cliente ou Funcionário -->
+                        <div class="form-row tipo-section">
+                            <div class="form-group">
+                                <label for="tipo">Tipo: *</label>
+                                <select id="tipo" name="tipo" required>
+                                    <option value="">Selecione o tipo</option>
+                                    <option value="cliente">👤 Cliente</option>
+                                    <option value="funcionario">👔 Funcionário</option>
+                                </select>
+                            </div>
+                        </div>
 
-                </div>
-                <div class="avaliador">
-                    <input type="checkbox" id="checkboxAvaliador" name="checkboxAvaliador">
-                    <span>Avaliador</span>
-                </div>
-                <div class="avaliado">
-                    <input type="checkbox" id="checkboxAvaliado" name="checkboxAvaliado"> Avaliado
-                </div>
+                        <!-- Campos de CLIENTE (condicionais) -->
+                        <div id="camposCliente" class="campos-condicionais" style="display: none;">
+                            <fieldset>
+                                <legend>👤 Dados do Cliente</legend>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="renda_cliente">Renda Mensal (R$):</label>
+                                        <input type="number" id="renda_cliente" name="renda_cliente" step="0.01" min="0" placeholder="0.00">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Data de Cadastro:</label>
+                                        <input type="text" id="data_cadastro_cliente" readonly disabled>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+
+                        <!-- Campos de FUNCIONÁRIO (condicionais) -->
+                        <div id="camposFuncionario" class="campos-condicionais" style="display: none;">
+                            <fieldset>
+                                <legend>👔 Dados do Funcionário</legend>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="cargo_id_cargo">Cargo: *</label>
+                                        <select id="cargo_id_cargo" name="cargo_id_cargo">
+                                            <option value="">Selecione o cargo</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="salario_funcionario">Salário (R$):</label>
+                                        <input type="number" id="salario_funcionario" name="salario_funcionario" step="0.01" min="0" placeholder="0.00">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="porcentagem_comissao_funcionario">Comissão (%):</label>
+                                        <input type="number" id="porcentagem_comissao_funcionario" name="porcentagem_comissao_funcionario" step="0.1" min="0" max="100" placeholder="0">
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+                    </fieldset>
+
+                    <!-- Botões de Ação -->
+                    <div class="form-actions">
+                        <button type="button" id="btnSalvar" class="btn btn-primary" style="display: none;">💾 Salvar</button>
+                        <button type="button" id="btnAlterar" class="btn btn-warning" style="display: none;">✏️ Alterar</button>
+                        <button type="button" id="btnExcluir" class="btn btn-danger" style="display: none;">🗑️ Excluir</button>
+                        <button type="button" id="btnCancelar" class="btn btn-secondary" style="display: none;">❌ Cancelar</button>
+                    </div>
+                </form>
             </div>
-        </section>
 
-        <section class="list-section">
-            <div class="table-container">
-                <table id="pessoasTable">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nome</th>
-                            <th>Email</th>
-                            <th>Primeiro Acesso</th>
-                            <th>Data Nascimento</th>
-                        </tr>
-                    </thead>
-                    <tbody id="pessoasTableBody">
-                        <!-- Dados serão carregados dinamicamente -->
-                    </tbody>
-                </table>
+            <!-- Tabela de Listagem -->
+            <div class="table-card">
+                <h2>📋 Lista de Pessoas Cadastradas</h2>
+                <div class="table-responsive">
+                    <table id="pessoasTable">
+                        <thead>
+                            <tr>
+                                <th>CPF</th>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Tipo</th>
+                                <th>Cargo/Renda</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pessoasTableBody">
+                            <tr><td colspan="5" class="loading">Carregando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
     </main>
 
-    <footer>
-        <p>&copy; 2025 CRUD Pessoa</p>
+    <!-- Footer -->
+    <footer class="footer-padrao">
+        <p>&copy; 2025 Habib Perfume Shop - Gestão de Pessoas</p>
     </footer>
 
-    <div id="messageContainer" class="message-container"></div>
+    <!-- Toast -->
+    <div id="toast-box"></div>
 
-    <script src="/pessoa/pessoa.js" defer></script>
-
+    <script src="/pessoa-static/pessoa.js" defer></script>
 </body>
-
 </html>

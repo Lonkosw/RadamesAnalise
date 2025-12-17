@@ -7,21 +7,24 @@
 .table input[type="number"] {
     width: 80px;
     padding: 8px;
-    border: 2px solid var(--border-color);
+    border: 2px solid #3A3A3A;
     border-radius: var(--radius-sm);
     text-align: center;
     font-size: 1rem;
+    background-color: #1A1A1A;
+    color: #F5F5F5;
 }
 
 .table input[type="number"]:focus {
-    border-color: var(--color-primary);
+    border-color: #8B0000;
     outline: none;
+    box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.2);
 }
 
 /* Botão remover item */
 .btn-remover {
-    background: var(--color-warning);
-    color: var(--text-primary);
+    background: linear-gradient(135deg, #8B0000, #720000);
+    color: #F5F5F5;
     padding: 6px 12px;
     border: none;
     border-radius: var(--radius-sm);
@@ -31,7 +34,8 @@
 }
 
 .btn-remover:hover {
-    background: #e0a800;
+    background: linear-gradient(135deg, #720000, #5A0000);
+    box-shadow: 0 4px 12px rgba(139, 0, 0, 0.35);
 }
 
 /* Box do total */
@@ -39,11 +43,12 @@
     text-align: right;
     font-size: 1.5rem;
     font-weight: bold;
-    color: var(--color-primary);
+    color: #8B0000;
     margin: 24px 0;
     padding: 16px;
-    background: var(--bg-light);
+    background: #2B2B2B;
     border-radius: var(--radius-md);
+    border: 1px solid #3A3A3A;
 }
 
 /* Ações do carrinho */

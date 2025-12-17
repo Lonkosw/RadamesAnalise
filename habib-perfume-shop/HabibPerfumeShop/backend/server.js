@@ -1,3 +1,6 @@
+// Carregar variáveis de ambiente
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+
 const express = require('express');
 const app = express();
 const path = require('path');
@@ -20,6 +23,8 @@ const caminhoFrontend = path.join(__dirname, '../frontend');
 console.log('Caminho frontend:', caminhoFrontend);
 // preparar caminho de imagens de produto (modelo B); montagem será após as rotas
 const caminhoImagensProduto = path.join(__dirname, '../imagens', 'produto');
+// caminho de imagens de notas olfativas
+const caminhoImagensNotas = path.join(__dirname, '../imagens', 'notas');
 
 
 
@@ -27,6 +32,10 @@ app.use(cookieParser());
 // Middleware para interpretar cookie de usuario
 const { parseUser } = require('./middleware/auth');
 app.use(parseUser);
+
+// Rotas estáticas ANTES das rotas de API para evitar conflitos
+// Pasta pessoa servida em /pessoa-static para evitar conflito com API /pessoa
+app.use('/pessoa-static', express.static(path.join(__dirname, '../frontend/pessoa')));
 
 // Logging básico de requisições (diagnóstico de 404/400 em /produto)
 app.use((req, _res, next) => {
@@ -140,6 +149,14 @@ app.use('/cargo', cargoRoutes);
 const relatorioRoutes = require('./routes/relatorioRoutes');
 app.use('/relatorio', relatorioRoutes);
 
+// Rotas de recuperação de senha
+const recuperacaoRoutes = require('./routes/recuperacaoRoutes');
+app.use('/recuperar', recuperacaoRoutes);
+
+// Rotas de marcas
+const marcaRoutes = require('./routes/marcaRoutes');
+app.use('/marca', marcaRoutes);
+
 // const avaliadorRoutes = require('./routes/avaliadorRoutes');
 // app.use('/avaliador', avaliadorRoutes);
 
@@ -157,6 +174,7 @@ app.use('/relatorio', relatorioRoutes);
 
 // Estáticos: montar APÓS as rotas para evitar colisão com endpoints
 app.use('/imagens-produtos', express.static(caminhoImagensProduto));
+app.use('/imagens/notas', express.static(caminhoImagensNotas));
 app.use(express.static(caminhoFrontend));
 
 // Rota padrão

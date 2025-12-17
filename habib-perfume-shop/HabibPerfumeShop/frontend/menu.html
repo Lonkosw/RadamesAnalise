@@ -27,13 +27,27 @@
   </header>
 
   <main class="container" style="padding-top: 32px; padding-bottom: 32px;">
-    <!-- Catálogo de Produtos -->
-    <section class="catalogo">
-      <h2 class="sec-title">🌹 Nossos Perfumes</h2>
-      <div id="produtosGrid" class="produtos-grid">
-        <p class="text-muted text-center">Carregando produtos...</p>
-      </div>
-    </section>
+    <!-- Layout com sidebar de filtros -->
+    <div class="catalogo-layout">
+      <!-- Sidebar de Filtros -->
+      <aside class="filtros-sidebar" id="filtrosSidebar">
+        <h3 class="filtros-titulo">🏷️ Filtrar por Marca</h3>
+        <div id="filtrosMarcas" class="filtros-lista">
+          <p class="text-muted">Carregando marcas...</p>
+        </div>
+        <button class="btn btn-sm btn-secondary" id="btnLimparFiltros" style="margin-top: 12px; width: 100%;">
+          Limpar Filtros
+        </button>
+      </aside>
+      
+      <!-- Catálogo de Produtos -->
+      <section class="catalogo">
+        <h2 class="sec-title">🌹 Nossos Perfumes</h2>
+        <div id="produtosGrid" class="produtos-grid-agrupado">
+          <p class="text-muted text-center">Carregando produtos...</p>
+        </div>
+      </section>
+    </div>
   </main>
 
   <!-- Footer Padrão -->
@@ -44,30 +58,50 @@
   <!-- Toast -->
   <div id="toast-box"></div>
 
+  <!-- Modal Notas Olfativas - Minimalista -->
+  <div id="modalNotasOverlay" class="modal-notas-overlay">
+    <div class="modal-notas-container">
+      <div class="modal-notas-header">
+        <span id="modalNotasTitle">Notas Olfativas</span>
+        <button type="button" id="modalNotasClose" class="modal-notas-close">&times;</button>
+      </div>
+      <img id="modalNotasImg" class="modal-notas-img" src="" alt="Notas Olfativas">
+    </div>
+  </div>
+
   <script>
     const API_BASE_URL = 'http://localhost:3001';
     const navMenu = document.getElementById('navMenu');
     const grid = document.getElementById('produtosGrid');
+    const filtrosMarcas = document.getElementById('filtrosMarcas');
+    
+    // Cache de dados
+    let todosProdutos = [];
+    let todasMarcas = [];
+    let marcasSelecionadas = new Set();
 
     // ==================== MENUS ====================
     
     // Menu do CLIENTE
     const MENU_CLIENTE = [
       { label: '🏠 Home', href: '/menu' },
-      { label: '🛒 Carrinho', href: '/visaoCliente/carrinho/carrinho.html' },
+      { label: '🛒 Carrinho <span id="cart-badge" class="carrinho-badge">0</span>', href: '/visaoCliente/carrinho/carrinho.html' },
       { label: '📦 Meus Pedidos', href: '/visaoCliente/pedidos/pedidos.html' }
     ];
 
     // Menu do GERENTE (somente CRUDs permitidos)
     const MENU_GERENTE = [
       { label: '🏠 Home', href: '/menu' },
+      { label: '🛒 Carrinho <span id="cart-badge" class="carrinho-badge">0</span>', href: '/pedido/abrirCarrinhoGerente' },
+      { label: '📦 Meus Pedidos', href: '/visaoCliente/pedidos/pedidos.html' },
       { 
         label: '⚙️ Cadastros', 
         submenu: [
+          { label: '👥 Gestão de Pessoas', href: '/pessoa/abrirCrudPessoa' },
           { label: '📋 Cargos', href: '/cargo/abrirCrudCargo' },
-          { label: '👔 Funcionários', href: '/funcionario/abrirCrudFuncionario' },
-          { label: '👥 Clientes', href: '/cliente/abrirCrudCliente' },
-          { label: '🧴 Produtos', href: '/produto/abrirCrudProduto' }
+          { label: '🏷️ Marcas', href: '/marca/abrirCrudMarca' },
+          { label: '🧴 Produtos', href: '/produto/abrirCrudProduto' },
+          { label: '📦 Pedidos', href: '/pedido/abrirCrudPedido' }
         ]
       },
       { 
@@ -121,6 +155,9 @@
       } else {
         nomeEl.textContent = 'Visitante';
       }
+      
+      // Atualiza contador do carrinho após render do menu
+      setTimeout(() => atualizarContadorCarrinho(), 0);
     }
 
     // ==================== AUTENTICAÇÃO ====================
@@ -152,24 +189,110 @@
 
     // ==================== PRODUTOS ====================
     
+    async function carregarMarcas() {
+      try {
+        const r = await fetch(API_BASE_URL + '/marca');
+        if (!r.ok) return;
+        todasMarcas = await r.json();
+        renderizarFiltrosMarcas();
+      } catch (e) {
+        console.error('Erro ao carregar marcas:', e);
+      }
+    }
+    
+    function renderizarFiltrosMarcas() {
+      if (!filtrosMarcas) return;
+      
+      filtrosMarcas.innerHTML = todasMarcas.map(m => `
+        <label class="filtro-checkbox">
+          <input type="checkbox" value="${m.id_marca}" onchange="toggleFiltroMarca(${m.id_marca})">
+          <span>${m.nome_marca}</span>
+        </label>
+      `).join('');
+    }
+    
+    window.toggleFiltroMarca = function(idMarca) {
+      if (marcasSelecionadas.has(idMarca)) {
+        marcasSelecionadas.delete(idMarca);
+      } else {
+        marcasSelecionadas.add(idMarca);
+      }
+      renderizarProdutosAgrupados();
+    };
+    
+    document.getElementById('btnLimparFiltros')?.addEventListener('click', () => {
+      marcasSelecionadas.clear();
+      const checkboxes = filtrosMarcas?.querySelectorAll('input[type="checkbox"]');
+      checkboxes?.forEach(cb => cb.checked = false);
+      renderizarProdutosAgrupados();
+    });
+    
     async function carregarProdutos() {
       try {
+        // Carregar marcas e produtos em paralelo
+        await carregarMarcas();
+        
         const r = await fetch(API_BASE_URL + '/produto');
         if (!r.ok) return;
-        const lista = await r.json();
+        todosProdutos = await r.json();
         
-        grid.innerHTML = '';
-        
-        if (lista.length === 0) {
-          grid.innerHTML = '<p class="text-muted text-center">Nenhum produto disponível</p>';
-          return;
-        }
-        
-        lista.forEach(p => grid.appendChild(cardProduto(p)));
+        renderizarProdutosAgrupados();
       } catch (e) {
         console.error('Erro ao carregar produtos:', e);
         grid.innerHTML = '<p class="text-danger text-center">Erro ao carregar produtos</p>';
       }
+    }
+    
+    function renderizarProdutosAgrupados() {
+      grid.innerHTML = '';
+      
+      // Filtrar produtos se houver marcas selecionadas
+      let produtosFiltrados = todosProdutos;
+      if (marcasSelecionadas.size > 0) {
+        produtosFiltrados = todosProdutos.filter(p => 
+          marcasSelecionadas.has(p.marca_id_marca)
+        );
+      }
+      
+      if (produtosFiltrados.length === 0) {
+        grid.innerHTML = '<p class="text-muted text-center" style="grid-column:1/-1;">Nenhum produto encontrado</p>';
+        return;
+      }
+      
+      // Agrupar produtos por marca
+      const grupos = {};
+      produtosFiltrados.forEach(p => {
+        const nomeMarca = p.nome_marca || 'Outros';
+        if (!grupos[nomeMarca]) {
+          grupos[nomeMarca] = [];
+        }
+        grupos[nomeMarca].push(p);
+      });
+      
+      // Ordenar marcas alfabeticamente (com "Outros" por último)
+      const marcasOrdenadas = Object.keys(grupos).sort((a, b) => {
+        if (a === 'Outros') return 1;
+        if (b === 'Outros') return -1;
+        return a.localeCompare(b);
+      });
+      
+      // Renderizar cada grupo
+      marcasOrdenadas.forEach(nomeMarca => {
+        const secaoMarca = document.createElement('div');
+        secaoMarca.className = 'marca-secao';
+        
+        secaoMarca.innerHTML = `<h2 class="marca-titulo">🏷️ ${nomeMarca}</h2>`;
+        
+        const gridProdutos = document.createElement('div');
+        gridProdutos.className = 'produtos-grid';
+        
+        grupos[nomeMarca].forEach(p => {
+          gridProdutos.appendChild(cardProduto(p));
+        });
+        
+        secaoMarca.appendChild(gridProdutos);
+        grid.appendChild(secaoMarca);
+      });
     }
 
     function cardProduto(p) {
@@ -179,13 +302,18 @@
       const id = p.id_produto;
       const nome = p.nome_produto || p.nome || 'Sem nome';
       const preco = Number(p.preco_produto || p.preco || 0).toFixed(2).replace('.', ',');
-      const marca = p.marca_produto || p.marca || '';
+      // Priorizar nome_marca (FK) sobre marca_produto (texto livre)
+      const marca = p.nome_marca || p.marca_produto || p.marca || '';
       const volume = p.volume_ml ? `${p.volume_ml} ml` : '';
       const concentracao = p.concentracao || '';
+      const temNotas = p.notas_olfativas_imagem ? true : false;
+      
+      // Usar view-image para buscar imagem dinamicamente
+      const imgSrc = `/view-image/${id}?t=${Date.now()}`;
       
       div.innerHTML = `
         <div class="produto-img">
-          <img src="/imagens-produtos/${id}.png" alt="${nome}" onerror="this.src='/imagens-produtos/default.png'">
+          <img src="${imgSrc}" alt="${nome}" onerror="this.src='/imagens-produtos/default.png'">
         </div>
         <div class="produto-info">
           <h3 class="produto-nome" title="${nome}">${nome}</h3>
@@ -193,11 +321,9 @@
           <p class="produto-volume">${volume}</p>
           <div class="produto-preco">R$ ${preco}</div>
           <div class="produto-acoes">
-            <button class="btn btn-primary btn-sm" onclick="adicionarCarrinho(${id}, '${nome.replace(/'/g, "\\'")}', ${p.preco_produto || p.preco || 0})">
+            ${temNotas ? `<button class="btn btn-outline btn-sm btn-notas-card" onclick="abrirModalNotasVitrine(${id}, '${nome.replace(/'/g, "\\'")}')">🔮 Notas</button>` : ''}
+            <button class="btn btn-primary btn-sm" onclick="adicionarCarrinho(${id}, '${nome.replace(/'/g, "\\'")}', ${p.preco_produto || p.preco || 0}, '${marca.replace(/'/g, "\\'")}')">
               🛒 Carrinho
-            </button>
-            <button class="btn btn-success btn-sm" onclick="comprarDireto(${id}, '${nome.replace(/'/g, "\\'")}')">
-              Comprar
             </button>
           </div>
         </div>
@@ -210,20 +336,30 @@
     
     function getCarrinho() {
       try {
-        return JSON.parse(sessionStorage.getItem('carrinho')) || [];
+        return JSON.parse(localStorage.getItem('carrinho')) || [];
       } catch {
         return [];
       }
     }
 
     function setCarrinho(items) {
-      sessionStorage.setItem('carrinho', JSON.stringify(items));
+      localStorage.setItem('carrinho', JSON.stringify(items));
     }
 
-    function adicionarCarrinho(id, nome, preco) {
+    function adicionarCarrinho(id, nome, preco, marca) {
       const items = getCarrinho();
-      // Estrutura padronizada: {id, nome, preco, quantidade}
+      // Estrutura padronizada: {id, nome, preco, marca, quantidade}
       const idx = items.findIndex(i => i.id === id);
+      
+      // Verificar estoque disponível
+      const produto = todosProdutos.find(p => p.id_produto === id);
+      const estoqueDisponivel = produto ? (produto.quantidade_estoque || 0) : 0;
+      const quantidadeNoCarrinho = idx >= 0 ? items[idx].quantidade : 0;
+      
+      if (quantidadeNoCarrinho >= estoqueDisponivel) {
+        toast(`⚠️ Estoque insuficiente! Disponível: ${estoqueDisponivel} unidade(s)`, 'warning');
+        return;
+      }
       
       if (idx >= 0) {
         items[idx].quantidade += 1;
@@ -232,6 +368,7 @@
           id: id,
           nome: nome,
           preco: Number(preco),
+          marca: marca || '',
           quantidade: 1
         });
       }
@@ -245,8 +382,11 @@
       const items = getCarrinho();
       const total = items.reduce((sum, item) => sum + item.quantidade, 0);
       // Atualizar badge se existir
-      const badge = document.querySelector('.carrinho-badge');
-      if (badge) badge.textContent = total;
+      const badge = document.getElementById('cart-badge');
+      if (badge) {
+        badge.textContent = total;
+        badge.style.display = total > 0 ? 'inline-block' : 'none';
+      }
     }
 
     async function comprarDireto(id, nome) {
@@ -306,6 +446,46 @@
         setTimeout(() => el.remove(), 300);
       }, 3000);
     }
+
+    // ==================== MODAL NOTAS OLFATIVAS ====================
+    
+    const modalNotasOverlay = document.getElementById('modalNotasOverlay');
+    const modalNotasClose = document.getElementById('modalNotasClose');
+    const modalNotasTitle = document.getElementById('modalNotasTitle');
+    const modalNotasImg = document.getElementById('modalNotasImg');
+    
+    // Expor função no escopo global para onclick
+    window.abrirModalNotasVitrine = function(produtoId, nomeProduto) {
+      if(modalNotasTitle) modalNotasTitle.textContent = `Notas Olfativas – ${nomeProduto || 'Produto'}`;
+      if(modalNotasImg) {
+        modalNotasImg.src = `/view-notas/${produtoId}?t=${Date.now()}`;
+        modalNotasImg.alt = `Notas Olfativas de ${nomeProduto}`;
+        modalNotasImg.onerror = () => {
+          modalNotasImg.src = '/imagens-notas/default-notas.png';
+          modalNotasImg.onerror = null;
+        };
+      }
+      if(modalNotasOverlay) modalNotasOverlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    };
+    
+    function fecharModalNotas() {
+      if(modalNotasOverlay) modalNotasOverlay.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    
+    // Event listeners do modal
+    modalNotasClose?.addEventListener('click', fecharModalNotas);
+    modalNotasOverlay?.addEventListener('click', (e) => {
+      if(e.target === modalNotasOverlay) fecharModalNotas();
+    });
+    
+    // Fechar modal com ESC
+    document.addEventListener('keydown', (e) => {
+      if(e.key === 'Escape' && modalNotasOverlay?.classList.contains('active')){
+        fecharModalNotas();
+      }
+    });
 
     // ==================== INIT ====================
     carregarUsuario();

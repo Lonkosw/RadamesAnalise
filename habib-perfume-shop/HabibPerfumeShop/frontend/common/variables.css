@@ -1,65 +1,65 @@
 /* ============================================================================
  * VARIABLES.CSS - Sistema de Design Unificado
- * HabibPerfumeShop - Padrão Visual Oficial
+ * HabibPerfumeShop - Tema Grafite/Vermelho
  * ============================================================================ */
 
 :root {
-  /* ===== CORES PRIMÁRIAS ===== */
-  --color-primary: #3A6EA5;
-  --color-primary-dark: #2d5a8a;
-  --color-primary-light: #5a8ec5;
+  /* ===== CORES PRIMÁRIAS (Vermelho Escuro) ===== */
+  --color-primary: #8B0000;
+  --color-primary-dark: #720000;
+  --color-primary-light: #A00000;
   
   /* ===== CORES SECUNDÁRIAS ===== */
-  --color-secondary: #6c757d;
-  --color-secondary-dark: #545b62;
-  --color-secondary-light: #868e96;
+  --color-secondary: #3A3A3A;
+  --color-secondary-dark: #2B2B2B;
+  --color-secondary-light: #4A4A4A;
   
   /* ===== CORES DE ESTADO ===== */
   --color-success: #28a745;
   --color-success-dark: #1e7e34;
-  --color-success-light: #d4edda;
+  --color-success-light: rgba(40, 167, 69, 0.2);
   
   --color-danger: #dc3545;
   --color-danger-dark: #bd2130;
-  --color-danger-light: #f8d7da;
+  --color-danger-light: rgba(220, 53, 69, 0.2);
   
   --color-warning: #ffc107;
   --color-warning-dark: #d39e00;
-  --color-warning-light: #fff3cd;
+  --color-warning-light: rgba(255, 193, 7, 0.2);
   
   --color-info: #17a2b8;
   --color-info-dark: #117a8b;
-  --color-info-light: #d1ecf1;
+  --color-info-light: rgba(23, 162, 184, 0.2);
   
-  /* ===== CORES NEUTRAS ===== */
-  --color-white: #FFFFFF;
-  --color-gray-50: #FAFAFA;
-  --color-gray-100: #F2F2F2;
-  --color-gray-200: #E5E5E5;
-  --color-gray-300: #D9D9D9;
-  --color-gray-400: #BDBDBD;
-  --color-gray-500: #9E9E9E;
-  --color-gray-600: #757575;
-  --color-gray-700: #616161;
-  --color-gray-800: #424242;
-  --color-gray-900: #222222;
-  --color-black: #000000;
+  /* ===== CORES NEUTRAS (Grafite) ===== */
+  --color-white: #F5F5F5;
+  --color-gray-50: #1A1A1A;
+  --color-gray-100: #222222;
+  --color-gray-200: #2B2B2B;
+  --color-gray-300: #3A3A3A;
+  --color-gray-400: #4A4A4A;
+  --color-gray-500: #666666;
+  --color-gray-600: #888888;
+  --color-gray-700: #AAAAAA;
+  --color-gray-800: #CCCCCC;
+  --color-gray-900: #E0E0E0;
+  --color-black: #F5F5F5;
   
-  /* ===== BACKGROUNDS ===== */
-  --bg-body: var(--color-gray-50);
-  --bg-card: var(--color-white);
-  --bg-header: var(--color-white);
-  --bg-footer: var(--color-gray-900);
-  --bg-input: var(--color-white);
-  --bg-table-header: var(--color-gray-100);
-  --bg-table-row-alt: var(--color-gray-50);
+  /* ===== BACKGROUNDS (Tema Escuro) ===== */
+  --bg-body: #1A1A1A;
+  --bg-card: #2B2B2B;
+  --bg-header: linear-gradient(135deg, #8B0000, #720000);
+  --bg-footer: #1A1A1A;
+  --bg-input: #2B2B2B;
+  --bg-table-header: #8B0000;
+  --bg-table-row-alt: #222222;
   
   /* ===== TEXTOS ===== */
-  --text-primary: var(--color-gray-900);
-  --text-secondary: var(--color-gray-600);
-  --text-muted: var(--color-gray-500);
-  --text-light: var(--color-white);
-  --text-link: var(--color-primary);
+  --text-primary: #F5F5F5;
+  --text-secondary: #E0E0E0;
+  --text-muted: #888888;
+  --text-light: #F5F5F5;
+  --text-link: #8B0000;
   
   /* ===== TIPOGRAFIA ===== */
   --font-family: 'Segoe UI', Arial, sans-serif;

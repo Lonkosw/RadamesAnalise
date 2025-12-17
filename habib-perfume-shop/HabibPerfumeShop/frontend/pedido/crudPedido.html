@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD Pedidos - Habib Perfume Shop</title>
+    <link rel="stylesheet" href="./crudPedido.css?v=2">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header-padrao">
+        <div class="header-content">
+            <a href="/menu" class="logo">🌸 Habib Perfume Shop</a>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="/menu">🏠 Home</a></li>
+                    <li><a href="/pedido/abrirCrudPedido">📦 Pedidos</a></li>
+                    <li><a href="/pedido/abrirCarrinhoGerente">🛒 Carrinho</a></li>
+                </ul>
+            </nav>
+            <div class="usuario-info">
+                <span id="nomeUsuario">Gerente</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="crud-section">
+            <h1 class="page-title">📦 CRUD de Pedidos</h1>
+            <p class="page-subtitle">Gerenciamento completo de pedidos e itens</p>
+
+            <!-- Formulário Principal -->
+            <div class="form-card">
+                <form id="pedidoForm">
+                    <!-- Barra de Busca -->
+                    <div class="search-bar">
+                        <div class="input-group">
+                            <label for="searchId">ID do Pedido:</label>
+                            <input type="number" id="searchId" placeholder="Digite o ID para buscar">
+                        </div>
+                        <div class="btn-group">
+                            <button type="button" id="btnBuscar" class="btn btn-info">🔍 Buscar</button>
+                            <button type="button" id="btnNovo" class="btn btn-success">➕ Novo</button>
+                        </div>
+                    </div>
+
+                    <!-- Dados do Pedido -->
+                    <fieldset id="formFields" disabled>
+                        <legend>Dados do Pedido</legend>
+                        
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 0.3;">
+                                <label for="id_pedido">ID:</label>
+                                <input type="text" id="id_pedido" name="id_pedido" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="data_pedido">Data do Pedido: *</label>
+                                <input type="date" id="data_pedido" name="data_pedido" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="status_pedido">Status:</label>
+                                <select id="status_pedido" name="status_pedido">
+                                    <option value="pendente">⏳ Aguardando Pagamento</option>
+                                    <option value="pago">✅ Pago</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cliente_cpf">Cliente (CPF): *</label>
+                                <div class="search-cliente-container">
+                                    <input type="text" id="cliente_cpf" name="cliente_cpf" 
+                                           placeholder="Digite CPF ou Nome para buscar..." 
+                                           autocomplete="off">
+                                    <ul id="resultadosCliente" class="resultados-busca"></ul>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="cliente_nome">Nome do Cliente:</label>
+                                <input type="text" id="cliente_nome" readonly placeholder="Será preenchido automaticamente">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group total-destaque">
+                                <label for="total_pedido">💰 Total do Pedido:</label>
+                                <input type="text" id="total_pedido" readonly value="R$ 0,00">
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- Botões de Ação -->
+                    <div class="form-actions">
+                        <button type="button" id="btnSalvar" class="btn btn-primary" style="display: none;">💾 Salvar</button>
+                        <button type="button" id="btnAlterar" class="btn btn-warning" style="display: none;">✏️ Alterar</button>
+                        <button type="button" id="btnExcluir" class="btn btn-danger" style="display: none;">🗑️ Excluir</button>
+                        <button type="button" id="btnCancelar" class="btn btn-secondary" style="display: none;">❌ Cancelar</button>
+                    </div>
+                </form>
+
+                <!-- Seção de Itens do Pedido -->
+                <div id="secaoItens" class="itens-section" style="display: none;">
+                    <div class="itens-header">
+                        <h3>📋 Itens do Pedido</h3>
+                    </div>
+
+                    <!-- Formulário para Adicionar/Editar Item -->
+                    <div class="item-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="selectProduto">Produto: *</label>
+                                <select id="selectProduto" class="select-produto">
+                                    <option value="">Selecione um produto...</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 0.4;">
+                                <label for="itemQuantidade">Qtd:</label>
+                                <input type="number" id="itemQuantidade" value="1" min="1">
+                            </div>
+                            <div class="form-group" style="flex: 0.5;">
+                                <label for="itemPreco">Preço Unit.:</label>
+                                <input type="text" id="itemPreco" readonly>
+                            </div>
+                            <div class="form-group" style="flex: 0.5;">
+                                <label for="itemSubtotal">Subtotal:</label>
+                                <input type="text" id="itemSubtotal" readonly>
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <button type="button" id="btnAdicionarItem" class="btn btn-success btn-sm">➕ Adicionar Item</button>
+                            <button type="button" id="btnAtualizarItem" class="btn btn-warning btn-sm" style="display: none;">✏️ Atualizar Item</button>
+                            <button type="button" id="btnCancelarItem" class="btn btn-secondary btn-sm" style="display: none;">Cancelar</button>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de Itens -->
+                    <div class="table-responsive">
+                        <table id="itensTable">
+                            <thead>
+                                <tr>
+                                    <th>ID Produto</th>
+                                    <th>Produto</th>
+                                    <th>Quantidade</th>
+                                    <th>Preço Unit.</th>
+                                    <th>Subtotal</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itensTableBody">
+                                <tr><td colspan="6" class="empty">Nenhum item adicionado</td></tr>
+                            </tbody>
+                            <tfoot>
+                                <tr class="total-row">
+                                    <td colspan="4"><strong>TOTAL GERAL:</strong></td>
+                                    <td colspan="2" id="totalGeralItens"><strong>R$ 0,00</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabela de Listagem de Pedidos -->
+            <div class="table-card">
+                <h2>📋 Lista de Pedidos</h2>
+                <div class="table-responsive">
+                    <table id="pedidosTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Data</th>
+                                <th>Cliente</th>
+                                <th>CPF</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pedidosTableBody">
+                            <tr><td colspan="6" class="loading">Carregando pedidos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer-padrao">
+        <p>&copy; 2025 Habib Perfume Shop - CRUD de Pedidos</p>
+    </footer>
+
+    <!-- Toast -->
+    <div id="toast-box"></div>
+
+    <script src="./crudPedido.js" defer></script>
+</body>
+</html>

@@ -1,60 +1,114 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
+
 <head>
-  <meta charset="UTF-8" />
-  <title>Detalhe do Pedido</title>
-  <link rel="stylesheet" href="pedido.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD - Pedido</title>
+    <link rel="stylesheet" href="./pesquisaDinamicaStyle.css">
+    <link rel="stylesheet" href="./pedido.css">
 </head>
+
 <body>
-  <header class="top-bar">
-    <div class="logo-area"><a href="/menu.html">Habib Perfume Shop</a></div>
-    <nav class="nav-actions">
-      <a href="/menu.html">Catálogo</a>
-      <a href="/carrinho/carrinho.html">Carrinho</a>
-      <a href="/pedido/lista.html">Meus Pedidos</a>
-    </nav>
-  </header>
+    <header>
+        <h1>🌸 CRUD Pedido - Habib Perfume Shop</h1>
+    </header>
 
-  <main class="page">
-    <section id="loading" class="estado loading">Carregando pedido...</section>
-    <section id="erro" class="estado erro hidden"></section>
+    <main>
+        <section class="form-section">
+            <h2>Cadastro de Pedido</h2>
 
-    <section id="pedidoView" class="pedido-view hidden">
-      <div class="header-pedido">
-        <h1>Pedido <span id="pedidoId"></span></h1>
-        <div class="status"><span id="pedidoStatus" class="badge"></span></div>
-      </div>
-      <div class="info-grid">
-        <div><strong>Data:</strong> <span id="pedidoData"></span></div>
-        <div><strong>Total:</strong> <span id="pedidoTotal"></span></div>
-        <div><strong>Cliente (CPF):</strong> <span id="pedidoCliente"></span></div>
-      </div>
-      <h2>Itens</h2>
-      <table class="tabela-itens">
-        <thead>
-          <tr><th>ID</th><th>Perfume</th><th>Qtd</th><th>Preço Unit.</th><th>Subtotal</th></tr>
-        </thead>
-        <tbody id="listaItens"></tbody>
-      </table>
-      <div id="secPagamentoPix" class="pagamento-pix hidden">
-        <h2>Pagamento Pix</h2>
-        <div class="pix-info">
-          <div><strong>Status Pix:</strong> <span id="pixStatus" class="badge"></span></div>
-          <div class="pix-payload-wrapper">
-            <strong>Payload:</strong>
-            <pre id="pixPayload" class="pix-payload"></pre>
-          </div>
-          <div class="pix-acoes">
-            <button id="btnCopiarPix" class="btn outline">Copiar código</button>
-          </div>
-        </div>
-      </div>
-      <div class="acoes-pedido" id="areaPagamento"></div>
-      <div class="voltar-area"><a class="btn" href="/menu.html">Voltar ao catálogo</a></div>
-    </section>
-  </main>
+            <form id="pedidoForm">
+                <div class="search-container">
+                    <label for="searchId">Buscar por ID:</label>
+                    <div class="search-input-group">
+                        <input type="number" id="searchId" placeholder="Digite o ID para buscar">
+                        <button type="button" id="btnBuscar">🔍 Buscar</button>
 
-  <div id="toast-box"></div>
-  <script src="pedido.js"></script>
+                        <button type="button" id="btnIncluir" class="btn-primary">Incluir</button>
+                        <button type="button" id="btnAlterar" class="btn-secondary" style="display: none;">Alterar</button>
+                        <button type="button" id="btnExcluir" class="btn-danger" style="display: none;">Excluir</button>
+                        <button type="button" id="btnSalvar" class="btn-save" style="display: none;">Salvar</button>
+                        <button type="button" id="btnCancelar" class="btn-cancel">Cancelar</button>
+                    </div>
+                </div>
+
+                <fieldset id="formFields">
+                    <legend>Dados do Pedido</legend>
+
+                    <div class="form-group">
+                        <input type="date" id="data_pedido" name="data_pedido" required>
+
+                        <div class="search-bar-container">
+                            <select id="searchType" class="search-select">
+                                <option value="cpf">CPF</option>
+                                <option value="nome">Nome</option>
+                            </select>
+                            <input type="text" id="cliente_cpf" name="cliente_cpf"
+                                placeholder="CPF cliente..." onfocus="buscaDinamica()">
+                            <ul id="resultsList" class="results-list"></ul>
+                        </div>
+
+                        <input type="text" id="funcionario_cpf" name="funcionario_cpf"
+                            placeholder="CPF funcionário (opcional)...">
+                    </div>
+
+                    <div class="form-group status-group">
+                        <label for="status_pedido">Status:</label>
+                        <select id="status_pedido" name="status_pedido" class="status-select">
+                            <option value="pendente">⏳ Aguardando Pagamento</option>
+                            <option value="pago">✅ Pago</option>
+                        </select>
+                    </div>
+                </fieldset>
+            </form>
+
+            <div class="itensDoPedido">
+                <div class="itens-header">
+                    <span>Itens do Pedido</span>
+                    <button type="button" id="btnAdicionarItem" onclick="adicionarItem()"
+                        class="btn-secondary btn-small">➕ Adicionar Item</button>
+                </div>
+                <div class="item-table-container">
+                    <table id="itensTable">
+                        <thead>
+                            <tr>
+                                <th>ID Pedido</th>
+                                <th>ID Produto</th>
+                                <th>Produto</th>
+                                <th>Quantidade</th>
+                                <th>Preço Unitário</th>
+                                <th>Subtotal</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itensTableBody">
+                            <!-- Itens serão carregados dinamicamente -->
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td colspan="5" style="text-align: right;"><strong>Total do Pedido:</strong></td>
+                                <td id="totalPedido"><strong>R$ 0,00</strong></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Habib Perfume Shop - CRUD Pedido</p>
+        <a href="/menu" class="btn-voltar">← Voltar ao Menu</a>
+    </footer>
+
+    <div id="messageContainer" class="message-container"></div>
+    <script src="./pesquisaDinamicaCliente.js"></script>
+    <script src="./pedido.js" defer></script>
+
 </body>
+
 </html>

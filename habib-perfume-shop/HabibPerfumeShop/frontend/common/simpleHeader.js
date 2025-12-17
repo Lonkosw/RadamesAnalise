@@ -6,13 +6,14 @@
     header.id='app-header';
     header.innerHTML = `
       <style>
-        #app-header{position:fixed;top:0;left:0;right:0;height:60px;background:#222;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:Arial,Helvetica,sans-serif;z-index:500}
-        #app-header .brand{font-weight:bold;cursor:pointer;letter-spacing:1px}
-        #app-header nav button{margin-left:8px;background:#444;color:#fff;border:none;padding:8px 14px;border-radius:4px;cursor:pointer;font-size:14px}
-        #app-header nav button.primary{background:#5a67d8}
-        #app-header nav button:hover{background:#666}
+        #app-header{position:fixed;top:0;left:0;right:0;height:60px;background:#1A1A1A;color:#F5F5F5;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:Arial,Helvetica,sans-serif;z-index:500;border-bottom:2px solid #8B0000}
+        #app-header .brand{font-weight:bold;cursor:pointer;letter-spacing:1px;color:#F5F5F5}
+        #app-header nav button{margin-left:8px;background:#3A3A3A;color:#F5F5F5;border:none;padding:8px 14px;border-radius:4px;cursor:pointer;font-size:14px}
+        #app-header nav button.primary{background:#8B0000}
+        #app-header nav button:hover{background:#8B0000}
         body{padding-top:60px!important}
-        #back-btn{position:fixed;top:70px;left:15px;background:#222;color:#fff;border:none;border-radius:50%;width:40px;height:40px;font-size:18px;cursor:pointer;z-index:400;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+        #back-btn{position:fixed;top:70px;left:15px;background:#2B2B2B;color:#F5F5F5;border:1px solid #8B0000;border-radius:50%;width:40px;height:40px;font-size:18px;cursor:pointer;z-index:400;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+        #back-btn:hover{background:#8B0000}
       </style>
       <div class='brand' id='brandHome'>Habib Perfume</div>
       <nav id='navArea'>Carregando...</nav>
@@ -60,6 +61,9 @@
     const select = document.createElement('select');
     select.style.padding='6px';
     select.style.borderRadius='4px';
+    select.style.background='#2B2B2B';
+    select.style.color='#F5F5F5';
+    select.style.border='1px solid #8B0000';
     const optTitulo = document.createElement('option');
     optTitulo.value='';
     optTitulo.textContent = `${usuario.nome} (${papel})`;

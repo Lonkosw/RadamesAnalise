@@ -2,8 +2,11 @@
 // pagamentoController.js - MODELO DO PROFESSOR (CandyShop)
 // Adaptado para HabibPerfumeShop
 // ============================================================================
-const { query } = require('../database');
+const { query, pool } = require('../database');
 const path = require('path');
+
+// Importa funções de estoque
+const { verificarEstoque, reduzirEstoque, restaurarEstoque } = require('./pedido_has_produtoController');
 
 // ============================================================================
 // ABRIR TELA DE PAGAMENTO (cliente) - GET /pagamento/abrirTelaPagamento
@@ -48,13 +51,16 @@ exports.listarPagamentos = async (req, res) => {
 
 // ============================================================================
 // CRIAR PAGAMENTO - POST /pagamento
-// Modelo professor: PK = pedido_id_pedido
-// Body: { pedido_id_pedido, data_pagamento?, valor_total_pagamento }
+// Estrutura modelo professor: id_pagamento (PK), data_pagamento, pedido_id_pedido
+// Body: { pedido_id_pedido, data_pagamento? }
+// IMPORTANTE: Ao criar pagamento, reduz o estoque dos produtos do pedido
 // ============================================================================
 exports.criarPagamento = async (req, res) => {
+  const client = await pool.connect();
+  
   console.log('Criando pagamento com dados:', req.body);
   try {
-    const { pedido_id_pedido, data_pagamento, valor_total_pagamento } = req.body;
+    const { pedido_id_pedido, data_pagamento } = req.body;
 
     if (!pedido_id_pedido) {
       return res.status(400).json({
@@ -62,31 +68,89 @@ exports.criarPagamento = async (req, res) => {
       });
     }
 
-    // Verifica se o pedido existe
-    const pedidoExiste = await query('SELECT id_pedido FROM pedido WHERE id_pedido = $1', [pedido_id_pedido]);
+    await client.query('BEGIN');
+
+    // Verifica se o pedido existe e seu status atual
+    const pedidoExiste = await client.query(
+      'SELECT id_pedido, status_pedido FROM pedido WHERE id_pedido = $1', 
+      [pedido_id_pedido]
+    );
     if (pedidoExiste.rowCount === 0) {
+      await client.query('ROLLBACK');
       return res.status(400).json({
         error: 'Pedido não encontrado'
       });
     }
 
+    const statusAtual = pedidoExiste.rows[0].status_pedido || 'pendente';
+
     // Verifica se já existe pagamento para este pedido
-    const pagamentoExiste = await query('SELECT pedido_id_pedido FROM pagamento WHERE pedido_id_pedido = $1', [pedido_id_pedido]);
+    const pagamentoExiste = await client.query(
+      'SELECT id_pagamento FROM pagamento WHERE pedido_id_pedido = $1', 
+      [pedido_id_pedido]
+    );
     if (pagamentoExiste.rowCount > 0) {
+      await client.query('ROLLBACK');
       return res.status(409).json({
         error: 'Já existe um pagamento para este pedido'
       });
     }
 
-    const dataFinal = data_pagamento || new Date().toISOString();
+    // =========================================================================
+    // CONTROLE DE ESTOQUE: Só reduz se o pedido NÃO estava pago
+    // =========================================================================
+    if (statusAtual !== 'pago') {
+      // Busca todos os itens do pedido
+      const itensResult = await client.query(
+        'SELECT produto_id_produto, quantidade FROM pedido_has_produto WHERE pedido_id_pedido = $1',
+        [pedido_id_pedido]
+      );
+      
+      const itens = itensResult.rows;
+      
+      // Primeiro, verifica se há estoque suficiente para TODOS os itens
+      for (const item of itens) {
+        const estoqueInfo = await verificarEstoque(item.produto_id_produto, item.quantidade, client);
+        if (!estoqueInfo.disponivel) {
+          await client.query('ROLLBACK');
+          return res.status(400).json({ 
+            error: `Estoque insuficiente para confirmar pagamento. ${estoqueInfo.erro}`,
+            estoqueDisponivel: estoqueInfo.estoqueAtual,
+            produtoId: item.produto_id_produto
+          });
+        }
+      }
+      
+      // Estoque OK - reduzir de todos os itens
+      console.log(`\n📦 Processando pagamento do pedido #${pedido_id_pedido}`);
+      for (const item of itens) {
+        const novoEstoque = await reduzirEstoque(item.produto_id_produto, item.quantidade, client);
+        console.log(`   📦 Estoque REDUZIDO: Produto ${item.produto_id_produto} - Qtd: -${item.quantidade} - Novo: ${novoEstoque}`);
+      }
+    }
 
-    const result = await query(
-      'INSERT INTO pagamento (pedido_id_pedido, data_pagamento, valor_total_pagamento) VALUES ($1, $2, $3) RETURNING *',
-      [pedido_id_pedido, dataFinal, valor_total_pagamento || 0]
+    // Cria o registro de pagamento
+    const result = await client.query(
+      'INSERT INTO pagamento (pedido_id_pedido, data_pagamento) VALUES ($1, $2) RETURNING *',
+      [pedido_id_pedido, data_pagamento || new Date()]
     );
 
-    res.status(201).json(result.rows[0]);
+    // Atualizar status do pedido para 'pago'
+    await client.query(
+      "UPDATE pedido SET status_pedido = 'pago' WHERE id_pedido = $1",
+      [pedido_id_pedido]
+    );
+
+    await client.query('COMMIT');
+    
+    console.log(`✅ Pagamento criado com sucesso para pedido #${pedido_id_pedido}`);
+
+    res.status(201).json({
+      ...result.rows[0],
+      message: 'Pagamento criado e estoque atualizado com sucesso'
+    });
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('Erro ao criar pagamento:', error);
 
     if (error.code === '23502') {
@@ -108,6 +172,8 @@ exports.criarPagamento = async (req, res) => {
     }
 
     res.status(500).json({ error: 'Erro interno do servidor' });
+  } finally {
+    client.release();
   }
 };
 
@@ -180,8 +246,11 @@ exports.atualizarPagamento = async (req, res) => {
 
 // ============================================================================
 // DELETAR PAGAMENTO - DELETE /pagamento/:id
+// IMPORTANTE: Ao deletar pagamento, restaura o estoque e muda status para pendente
 // ============================================================================
 exports.deletarPagamento = async (req, res) => {
+  const client = await pool.connect();
+  
   try {
     const id = parseInt(req.params.id);
 
@@ -189,22 +258,62 @@ exports.deletarPagamento = async (req, res) => {
       return res.status(400).json({ error: 'ID deve ser um número válido' });
     }
 
-    const existingResult = await query(
+    await client.query('BEGIN');
+
+    const existingResult = await client.query(
       'SELECT * FROM pagamento WHERE pedido_id_pedido = $1',
       [id]
     );
 
     if (existingResult.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Pagamento não encontrado' });
     }
 
-    await query(
+    // Verifica o status atual do pedido
+    const pedidoResult = await client.query(
+      'SELECT status_pedido FROM pedido WHERE id_pedido = $1',
+      [id]
+    );
+    
+    const statusAtual = pedidoResult.rows[0]?.status_pedido || 'pendente';
+
+    // Se o pedido estava pago, restaurar estoque
+    if (statusAtual === 'pago') {
+      const itensResult = await client.query(
+        'SELECT produto_id_produto, quantidade FROM pedido_has_produto WHERE pedido_id_pedido = $1',
+        [id]
+      );
+      
+      console.log(`\n📦 Cancelando pagamento do pedido #${id} - Restaurando estoque`);
+      for (const item of itensResult.rows) {
+        const novoEstoque = await restaurarEstoque(item.produto_id_produto, item.quantidade, client);
+        console.log(`   📦 Estoque RESTAURADO: Produto ${item.produto_id_produto} - Qtd: +${item.quantidade} - Novo: ${novoEstoque}`);
+      }
+    }
+
+    // Deletar o pagamento
+    await client.query(
       'DELETE FROM pagamento WHERE pedido_id_pedido = $1',
       [id]
     );
 
-    res.status(204).send();
+    // Atualizar status do pedido para 'pendente'
+    await client.query(
+      "UPDATE pedido SET status_pedido = 'pendente' WHERE id_pedido = $1",
+      [id]
+    );
+
+    await client.query('COMMIT');
+    
+    console.log(`✅ Pagamento deletado e estoque restaurado para pedido #${id}`);
+
+    res.json({ 
+      success: true, 
+      message: 'Pagamento cancelado e estoque restaurado' 
+    });
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('Erro ao deletar pagamento:', error);
 
     if (error.code === '23503') {
@@ -214,6 +323,8 @@ exports.deletarPagamento = async (req, res) => {
     }
 
     res.status(500).json({ error: 'Erro interno do servidor' });
+  } finally {
+    client.release();
   }
 };
 
@@ -342,8 +453,11 @@ exports.removerFormaPagamentoDoPedido = async (req, res) => {
 // ============================================================================
 // CRIAR PAGAMENTO COMPLETO (com formas de pagamento) - POST /pagamento/completo
 // Recebe: { pedido_id_pedido, valor_total, formas: [{ id_forma, valor }] }
+// IMPORTANTE: Ao criar pagamento, reduz o estoque dos produtos do pedido
 // ============================================================================
 exports.criarPagamentoCompleto = async (req, res) => {
+  const client = await pool.connect();
+  
   console.log('Criando pagamento completo com dados:', req.body);
   try {
     const { pedido_id_pedido, valor_total, formas } = req.body;
@@ -352,41 +466,118 @@ exports.criarPagamentoCompleto = async (req, res) => {
       return res.status(400).json({ error: 'ID do pedido é obrigatório' });
     }
 
-    // 1. Criar o pagamento
-    const pagResult = await query(
-      'INSERT INTO pagamento (pedido_id_pedido, data_pagamento, valor_total_pagamento) VALUES ($1, NOW(), $2) RETURNING *',
-      [pedido_id_pedido, valor_total || 0]
+    await client.query('BEGIN');
+
+    // Verificar status atual do pedido
+    const pedidoResult = await client.query(
+      'SELECT id_pedido, status_pedido FROM pedido WHERE id_pedido = $1',
+      [pedido_id_pedido]
+    );
+    
+    if (pedidoResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Pedido não encontrado' });
+    }
+    
+    const statusAtual = pedidoResult.rows[0].status_pedido || 'pendente';
+
+    // Verificar se já existe pagamento
+    const pagExistente = await client.query(
+      'SELECT id_pagamento FROM pagamento WHERE pedido_id_pedido = $1',
+      [pedido_id_pedido]
+    );
+    
+    if (pagExistente.rows.length > 0) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'Já existe pagamento para este pedido' });
+    }
+
+    // =========================================================================
+    // CONTROLE DE ESTOQUE: Só reduz se o pedido NÃO estava pago
+    // =========================================================================
+    if (statusAtual !== 'pago') {
+      const itensResult = await client.query(
+        'SELECT produto_id_produto, quantidade FROM pedido_has_produto WHERE pedido_id_pedido = $1',
+        [pedido_id_pedido]
+      );
+      
+      const itens = itensResult.rows;
+      
+      // Primeiro, verifica se há estoque suficiente para TODOS os itens
+      for (const item of itens) {
+        const estoqueInfo = await verificarEstoque(item.produto_id_produto, item.quantidade, client);
+        if (!estoqueInfo.disponivel) {
+          await client.query('ROLLBACK');
+          return res.status(400).json({ 
+            error: `Estoque insuficiente para confirmar pagamento. ${estoqueInfo.erro}`,
+            estoqueDisponivel: estoqueInfo.estoqueAtual,
+            produtoId: item.produto_id_produto
+          });
+        }
+      }
+      
+      // Estoque OK - reduzir de todos os itens
+      console.log(`\n📦 Processando pagamento completo do pedido #${pedido_id_pedido}`);
+      for (const item of itens) {
+        const novoEstoque = await reduzirEstoque(item.produto_id_produto, item.quantidade, client);
+        console.log(`   📦 Estoque REDUZIDO: Produto ${item.produto_id_produto} - Qtd: -${item.quantidade} - Novo: ${novoEstoque}`);
+      }
+    }
+
+    // 1. Criar o pagamento na tabela principal
+    const pagResult = await client.query(
+      'INSERT INTO pagamento (pedido_id_pedido, data_pagamento) VALUES ($1, NOW()) RETURNING *',
+      [pedido_id_pedido]
     );
 
     const pagamento = pagResult.rows[0];
 
-    // 2. Inserir formas de pagamento se fornecidas
-    if (Array.isArray(formas) && formas.length > 0) {
-      for (const forma of formas) {
-        const idForma = forma.id_forma || forma.forma_pagamento_id_forma_pagamento;
-        const valor = forma.valor || forma.valor_pago || 0;
-        
-        if (idForma) {
-          await query(
-            'INSERT INTO pagamento_has_forma_pagamento (pagamento_id_pedido, forma_pagamento_id_forma_pagamento, valor_pago) VALUES ($1, $2, $3)',
-            [pedido_id_pedido, idForma, valor]
-          );
-        }
-      }
-    }
-
-    // 3. Buscar formas inseridas
-    const formasInseridas = await query(
-      'SELECT * FROM pagamento_has_forma_pagamento WHERE pagamento_id_pedido = $1',
+    // 1.1 Atualizar status do pedido para 'pago'
+    await client.query(
+      "UPDATE pedido SET status_pedido = 'pago' WHERE id_pedido = $1",
       [pedido_id_pedido]
     );
 
+    // 2. Inserir formas de pagamento em pagamento_has_forma_pagamento
+    let formasInseridas = [];
+    if (Array.isArray(formas) && formas.length > 0) {
+      try {
+        for (const forma of formas) {
+          const idForma = forma.id_forma || forma.forma_pagamento_id_forma_pagamento;
+          const valor = forma.valor || forma.valor_pago || 0;
+          
+          if (idForma) {
+            await client.query(
+              'INSERT INTO pagamento_has_forma_pagamento (pagamento_id_pagamento, forma_pagamento_id_forma_pagamento, valor_pago) VALUES ($1, $2, $3)',
+              [pagamento.id_pagamento, idForma, valor]
+            );
+          }
+        }
+        
+        // Buscar formas inseridas
+        const formasResult = await client.query(
+          'SELECT * FROM pagamento_has_forma_pagamento WHERE pagamento_id_pagamento = $1',
+          [pagamento.id_pagamento]
+        );
+        formasInseridas = formasResult.rows;
+      } catch (e) {
+        console.log('Erro ao inserir formas de pagamento:', e.message);
+      }
+    }
+
+    await client.query('COMMIT');
+    
+    console.log(`✅ Pagamento completo criado com sucesso para pedido #${pedido_id_pedido}`);
+
     res.status(201).json({
       pagamento: pagamento,
-      formas_pagamento: formasInseridas.rows
+      valor_total: valor_total,
+      formas_pagamento: formasInseridas,
+      message: 'Pagamento criado e estoque atualizado com sucesso'
     });
 
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('Erro ao criar pagamento completo:', error);
 
     if (error.code === '23505') {
@@ -398,5 +589,7 @@ exports.criarPagamentoCompleto = async (req, res) => {
     }
 
     res.status(500).json({ error: 'Erro interno do servidor' });
+  } finally {
+    client.release();
   }
 };

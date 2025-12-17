@@ -100,12 +100,22 @@ async function carregarPedidos() {
             // Criar card do pedido
             const card = document.createElement('div');
             card.className = 'pedido-card';
+            
+            // Usar status_pedido do banco (não mais baseado em pagamento)
+            const statusPedido = (pedido.status_pedido || 'pendente').toLowerCase();
+            const isPago = statusPedido === 'pago';
+            
+            // Botão de pagar (só aparece se status é 'pendente')
+            const botaoPagar = !isPago 
+                ? `<button class="btn-pagar" onclick="pagarPedido(${pedido.id_pedido}, ${total})">💳 Pagar Agora</button>`
+                : '';
+            
             card.innerHTML = `
                 <div class="pedido-header">
                     <span class="pedido-numero">Pedido #${pedido.id_pedido}</span>
                     <span class="pedido-data">${data}</span>
-                    <span class="pedido-status ${pagamento ? 'status-pago' : 'status-pendente'}">
-                        ${pagamento ? '✅ Pago' : '⏳ Pendente'}
+                    <span class="pedido-status ${isPago ? 'status-pago' : 'status-pendente'}">
+                        ${isPago ? '✅ Pago' : '⏳ Aguardando Pagamento'}
                     </span>
                 </div>
                 <div class="pedido-itens">
@@ -117,8 +127,11 @@ async function carregarPedidos() {
                         }
                     </ul>
                 </div>
-                <div class="pedido-total">
-                    Total: R$ ${total.toFixed(2)}
+                <div class="pedido-footer">
+                    <div class="pedido-total">
+                        Total: R$ ${total.toFixed(2)}
+                    </div>
+                    ${botaoPagar}
                 </div>
             `;
 
@@ -133,4 +146,22 @@ async function carregarPedidos() {
             </div>
         `;
     }
+}
+
+/**
+ * Redireciona para a página de pagamento de um pedido pendente
+ * @param {number} idPedido - ID do pedido
+ * @param {number} valorTotal - Valor total do pedido
+ */
+function pagarPedido(idPedido, valorTotal) {
+    // Salvar dados do pedido no sessionStorage para a página de pagamento
+    const dadosPagamento = {
+        id_pedido: idPedido,
+        valor_total: valorTotal,
+        cliente_cpf: cpfCliente
+    };
+    sessionStorage.setItem('dadosPagamento', JSON.stringify(dadosPagamento));
+    
+    // Redirecionar para página de pagamento
+    window.location.href = '../pagamento/pagamento.html';
 }

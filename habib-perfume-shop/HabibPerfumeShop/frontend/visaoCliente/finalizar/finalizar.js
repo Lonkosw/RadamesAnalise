@@ -5,7 +5,8 @@
 
 const API_BASE = 'http://localhost:3001';
 let valorTotal = 0;
-let cpfCliente = null;
+let cpfUsuario = null;
+let tipoUsuario = null; // 'cliente' ou 'funcionario'
 
 // Ao carregar página
 document.addEventListener('DOMContentLoaded', async () => {
@@ -22,8 +23,9 @@ async function obterDadosUsuario() {
         const data = await response.json();
         
         if (data.status === 'ok' && data.usuario) {
-            cpfCliente = data.usuario.cpf;
-            console.log('Cliente logado:', data.usuario.nome, 'CPF:', cpfCliente);
+            cpfUsuario = data.usuario.cpf;
+            tipoUsuario = data.usuario.tipo; // 'cliente' ou 'funcionario'
+            console.log('Usuário logado:', data.usuario.nome, 'CPF:', cpfUsuario, 'Tipo:', tipoUsuario);
         } else {
             alert('Você precisa estar logado para finalizar a compra.');
             window.location.href = '/login/login.html';
@@ -36,7 +38,7 @@ async function obterDadosUsuario() {
 function carregarFinalizar() {
     const tbodyLista = document.getElementById('listaFinalizar');
     const totalFinal = document.getElementById('total-final');
-    const carrinho = JSON.parse(sessionStorage.getItem('carrinho')) || [];
+    const carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
 
     tbodyLista.innerHTML = '';
     let total = 0;
@@ -77,7 +79,7 @@ function carregarFinalizar() {
 
 function obterCarrinhoParaEnvio(idPedido) {
     try {
-        const carrinhoData = JSON.parse(sessionStorage.getItem('carrinho')) || [];
+        const carrinhoData = JSON.parse(localStorage.getItem('carrinho')) || [];
         
         return carrinhoData.map(item => ({
             id_pedido: idPedido,
@@ -93,96 +95,94 @@ function obterCarrinhoParaEnvio(idPedido) {
 }
 
 // Envia o pedido ao backend (modelo do professor)
+// CORRIGIDO: Agora envia os itens junto com o pedido
+// ATUALIZADO: Suporta tanto cliente quanto funcionário
 async function enviarPedido() {
-    const carrinho = JSON.parse(sessionStorage.getItem('carrinho')) || [];
+    const carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
 
     if (carrinho.length === 0) {
         alert("O carrinho está vazio.");
         return;
     }
 
-    if (!cpfCliente) {
+    if (!cpfUsuario) {
         alert("Você precisa estar logado.");
         window.location.href = '/login/login.html';
         return;
     }
 
-    // Monta o pedido no formato do professor
+    // Monta o pedido com os itens
+    // Se for funcionário, usa a rota /pedido/gerente
+    // Se for cliente, usa a rota /pedido/online
     const pedido = {
-        data_pedido: new Date().toISOString().split('T')[0], // Formato DATE
-        cliente_pessoa_cpf_pessoa: cpfCliente
+        data_pedido: new Date().toISOString().split('T')[0],
+        cliente_cpf: cpfUsuario, // Tanto cliente quanto funcionário usam seu próprio CPF
+        itens: carrinho.map(item => ({
+            produto_id: item.id || item.id_produto || item.codigo,
+            id_produto: item.id || item.id_produto || item.codigo,
+            quantidade: item.quantidade || 1,
+            preco: item.preco || item.preco_unitario || 0,
+            preco_unitario: item.preco || item.preco_unitario || 0
+        }))
     };
 
+    // Se for funcionário, adiciona funcionario_cpf
+    if (tipoUsuario === 'funcionario') {
+        pedido.funcionario_cpf = cpfUsuario;
+    }
+
+    console.log('📦 Enviando pedido:', pedido, 'Tipo usuário:', tipoUsuario);
+
     try {
-        // 1. Criar o pedido via POST /pedido/online
-        const resposta = await fetch(`${API_BASE}/pedido/online`, {
+        // Escolhe a rota baseado no tipo de usuário
+        const rota = tipoUsuario === 'funcionario' ? '/pedido/gerente' : '/pedido/online';
+        
+        const resposta = await fetch(`${API_BASE}${rota}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify(pedido)
         });
 
+        const dadosPedido = await resposta.json();
+        
         if (!resposta.ok) {
-            const erro = await resposta.json();
-            throw new Error(erro.error || 'Falha ao criar pedido na API.');
+            throw new Error(dadosPedido.error || 'Falha ao criar pedido na API.');
         }
 
-        const dadosPedido = await resposta.json();
         console.log('✅ Pedido criado:', dadosPedido);
 
-        // 2. Preparar itens para inserção em lote
-        // FORMATO CORRETO DO BACKEND: {itens: [{pedido_id_pedido, produto_id_produto, quantidade, preco_unitario}]}
-        const itensParaEnvio = {
-            itens: carrinho.map(item => ({
-                pedido_id_pedido: dadosPedido.id_pedido,
-                produto_id_produto: item.id || item.codigo || item.id_produto,
-                quantidade: item.quantidade,
-                preco_unitario: item.preco || item.preco_unitario
-            }))
-        };
-
-        console.log('Itens para envio:', itensParaEnvio);
-
-        // 3. Enviar itens para pedido_has_produto/lote
-        const respostaLote = await fetch(`${API_BASE}/pedido_has_produto/lote`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify(itensParaEnvio)
-        });
-
-        if (!respostaLote.ok) {
-            const erroLote = await respostaLote.json();
-            console.error('Erro ao inserir itens:', erroLote);
-            throw new Error(erroLote.error || 'Erro ao inserir itens do pedido');
-        } else {
-            const dadosLote = await respostaLote.json();
-            console.log('✅ Itens inseridos:', dadosLote);
+        // Extrair o ID do pedido
+        const idPedido = dadosPedido.id_pedido || dadosPedido.pedido?.id_pedido;
+        const totalPedido = dadosPedido.total || valorTotal;
+        
+        if (!idPedido) {
+            throw new Error('ID do pedido não retornado pelo servidor');
         }
 
-        // 4. Armazenar dados para página de pagamento
+        // Armazenar dados para página de pagamento
         const dadosPagamento = {
-            id_pedido: dadosPedido.id_pedido,
-            valor_total: valorTotal,
-            cliente_cpf: cpfCliente
+            id_pedido: idPedido,
+            valor_total: totalPedido,
+            cliente_cpf: cpfUsuario
         };
         sessionStorage.setItem('dadosPagamento', JSON.stringify(dadosPagamento));
 
-        // 5. Limpar carrinho após sucesso
-        sessionStorage.removeItem('carrinho');
+        // Limpar carrinho após sucesso
+        localStorage.removeItem('carrinho');
 
-        // 6. Mostrar resumo e redirecionar
-        let resumo = `Pedido #${dadosPedido.id_pedido} criado com sucesso!\n\nItens:\n`;
+        // Mostrar resumo e redirecionar
+        let resumo = `Pedido #${idPedido} criado com sucesso!\n\nItens:\n`;
         carrinho.forEach(item => {
             const nome = item.nome || item.nome_produto || 'Produto';
             const preco = item.preco || item.preco_unitario || 0;
             resumo += `- ${nome}: ${item.quantidade} un. x R$ ${Number(preco).toFixed(2)}\n`;
         });
-        resumo += `\nTotal: R$ ${valorTotal.toFixed(2)}`;
+        resumo += `\nTotal: R$ ${totalPedido.toFixed(2)}`;
 
         alert(resumo);
 
-        // 7. Redirecionar para pagamento
+        // Redirecionar para pagamento
         window.location.href = '../pagamento/pagamento.html';
 
     } catch (erro) {

@@ -65,9 +65,17 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="marca">Marca</label>
-              <input type="text" name="marca" id="marca" class="form-control" placeholder="Marca do produto">
+              <label for="marca_id_marca">Marca (Cadastrada)</label>
+              <select name="marca_id_marca" id="marca_id_marca" class="form-control">
+                <option value="">-- Selecione uma marca --</option>
+              </select>
             </div>
+            <div class="form-group">
+              <label for="marca">Marca (Texto Livre)</label>
+              <input type="text" name="marca" id="marca" class="form-control" placeholder="Ou digite manualmente">
+            </div>
+          </div>
+          <div class="form-row">
             <div class="form-group">
               <label for="volume_ml">Volume (ml)</label>
               <input type="number" name="volume_ml" id="volume_ml" class="form-control" placeholder="100">
@@ -89,8 +97,22 @@
               <input type="number" name="quantidade_estoque" id="quantidade_estoque" class="form-control" required placeholder="0">
             </div>
             <div class="form-group">
-              <label for="inpImagem">Imagem (PNG)</label>
-              <input type="file" id="inpImagem" class="form-control" accept="image/png">
+              <label for="inpImagem">Imagem do Produto (PNG, JPG, WEBP - máx 2MB)</label>
+              <input type="file" id="inpImagem" class="form-control" accept="image/png,image/jpeg,image/webp">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="inpNotas">Imagem das Notas Olfativas</label>
+              <input type="file" id="inpNotas" class="form-control" accept="image/png,image/jpeg,image/webp">
+            </div>
+            <div class="form-group">
+              <label>Preview das Notas</label>
+              <div class="img-preview" id="notasPreviewContainer">
+                <img id="previewNotas" alt="Preview Notas">
+                <span id="notasPlaceholder">Nenhuma imagem de notas</span>
+              </div>
+              <button type="button" id="btnVerNotas" class="btn btn-outline btn-sm btn-notas-view" hidden style="margin-top: 8px; width: 100%;">🔮 Ver Notas Olfativas</button>
             </div>
           </div>
           <div class="form-group" style="grid-column: 1/-1;">
@@ -114,6 +136,17 @@
       </div>
     </section>
   </main>
+
+  <!-- Modal de Notas Olfativas - Minimalista -->
+  <div id="modalNotasOverlay" class="modal-notas-overlay">
+    <div class="modal-notas-container">
+      <div class="modal-notas-header">
+        <span id="modalNotasTitle">Notas Olfativas</span>
+        <button type="button" id="modalNotasClose" class="modal-notas-close">&times;</button>
+      </div>
+      <img id="modalNotasImg" class="modal-notas-img" src="" alt="Notas Olfativas">
+    </div>
+  </div>
 
   <!-- Footer Padrão -->
   <footer class="footer-padrao">
